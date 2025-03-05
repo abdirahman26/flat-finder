@@ -31,11 +31,11 @@ const SlideContent: React.FC<SlideContentProps> = ({
           {price}
         </p>
         <div className="mt-8 flex justify-center gap-4">
-          <button className="px-6 py-3 bg-white text-custom-dark font-bold rounded hover:bg-custom-lime hover:text-black transition-all duration-300">
-            View Details
+          <button className="cursor-pointer px-6 py-3 bg-white text-custom-dark font-bold rounded hover:bg-custom-lime hover:text-black transition-all duration-300">
+            Sign Up
           </button>
-          <button className="px-6 py-3 border border-white text-white font-bold rounded hover:bg-white/10 transition-all duration-300">
-            Book Viewing
+          <button className="cursor-pointer px-6 py-3 border border-white text-white font-bold rounded hover:bg-white/10 transition-all duration-300">
+            Sign In
           </button>
         </div>
       </div>
