@@ -31,7 +31,7 @@ const Navigation = ({
       {/* Navigation arrows */}
       <button
         onClick={onPrev}
-        className="fixed left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/20"
+        className="cursor-pointer fixed left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/20"
         aria-label="Previous property"
       >
         <ArrowLeft size={20} />
@@ -39,7 +39,7 @@ const Navigation = ({
 
       <button
         onClick={onNext}
-        className="fixed right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/20"
+        className=" cursor-pointer fixed right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-sm text-white transition-all duration-300 hover:bg-white/20"
         aria-label="Next property"
       >
         <ArrowRight size={20} />

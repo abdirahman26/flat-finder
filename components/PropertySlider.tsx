@@ -12,7 +12,7 @@ const properties = [
       "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?q=80&w=2070&auto=format&fit=crop",
     title: "Charming Victorian Terraced House",
     location: "Islington, London",
-    price: "£785,000",
+    price: "£245 / week",
     features: "3 Bedrooms • 1 Bathroom • 1,100 sq ft",
   },
   {
@@ -21,7 +21,7 @@ const properties = [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?q=80&w=2070&auto=format&fit=crop",
     title: "Modern Apartment with Balcony",
     location: "Canary Wharf, London",
-    price: "£450,000",
+    price: "£2,500 / month",
     features: "2 Bedrooms • 2 Bathrooms • 850 sq ft",
   },
   {
@@ -30,7 +30,7 @@ const properties = [
       "https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=2070&auto=format&fit=crop",
     title: "Modest Garden Flat",
     location: "Hackney, London",
-    price: "£425,000",
+    price: "£1,200 / month",
     features: "1 Bedroom • 1 Bathroom • 550 sq ft",
   },
   {
@@ -39,7 +39,7 @@ const properties = [
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2080&auto=format&fit=crop",
     title: "Cozy Mews House with Character",
     location: "Notting Hill, London",
-    price: "£895,000",
+    price: "£125 / night",
     features: "3 Bedrooms • 2 Bathrooms • 1,200 sq ft",
   },
 ];
