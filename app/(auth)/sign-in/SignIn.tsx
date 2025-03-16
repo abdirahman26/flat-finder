@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -11,12 +12,61 @@ import GoogleAction from "@/components/GoogleActions";
 import Seperator from "@/components/Sperator";
 import StyledInput from "@/components/StyledInput";
 import StyledButton from "@/components/StyledButton";
+import { signInFunc } from "@/app/(auth)/actions";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/utils/supabase";
 
 const Login = () => {
-  const form = useForm();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // Prevents multiple submissions
 
-  const handleLogin = () => {
-    console.log("Logging in...");
+  const form = useForm();
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    try{
+    setLoading(true);
+
+    const { data, error } = await signInFunc(email, password);
+
+    if (error) {
+      console.log(error);
+      setLoading(false);
+      return;
+    }
+  
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log(data?.user);
+    console.log(data?.session)
+    if(data?.user){
+      console.log("User exists");
+    } else {
+      console.log("User does not exist");
+    }
+    router.refresh();
+    router.push('/consultant');
+
+
+    // case switch for roles: admin, consultant and landlord
+    // switch (data?.user?.role) {
+    //   case "Admin":
+    //     router.push("/admin");
+    //     break;
+    //   case "Consultant":
+    //     router.push("/consultant");
+    //     break;
+    //   case "Landlord":
+    //     router.push("/landlord");
+    //     break;
+    //   default:
+    //     router.push("/sign-in");
+
+  } catch (error) {
+    console.error("Login error:", error);
+  } finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -52,6 +102,10 @@ const Login = () => {
                       placeholder="Email"
                       validationProps={field}
                       type="email"
+                      onInput={(e) => {
+                        // @ts-ignore
+                        setEmail(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-red-400 text-sm mt-1" />
@@ -67,6 +121,10 @@ const Login = () => {
                       placeholder="Password"
                       validationProps={field}
                       type="password"
+                      onInput={(e) => {
+                        // @ts-ignore
+                        setPassword(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-red-400 text-sm mt-1" />
