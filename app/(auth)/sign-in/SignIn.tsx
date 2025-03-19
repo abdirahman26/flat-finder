@@ -15,6 +15,7 @@ import StyledButton from "@/components/StyledButton";
 import { signInFunc } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/utils/supabase";
+import { checkSession } from '@/lib/utils/supabase'
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -35,32 +36,6 @@ const Login = () => {
       setLoading(false);
       return;
     }
-  
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(data?.user);
-    console.log(data?.session)
-    if(data?.user){
-      console.log("User exists");
-    } else {
-      console.log("User does not exist");
-    }
-    router.refresh();
-    router.push('/consultant');
-
-
-    // case switch for roles: admin, consultant and landlord
-    // switch (data?.user?.role) {
-    //   case "Admin":
-    //     router.push("/admin");
-    //     break;
-    //   case "Consultant":
-    //     router.push("/consultant");
-    //     break;
-    //   case "Landlord":
-    //     router.push("/landlord");
-    //     break;
-    //   default:
-    //     router.push("/sign-in");
 
   } catch (error) {
     console.error("Login error:", error);
@@ -68,6 +43,7 @@ const Login = () => {
     setLoading(false);
   }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">

@@ -18,7 +18,7 @@ function Page() {
   };
   return (
     <div className="flex items-center justify-center text-4xl text-custom-lime">
-      WELCOME TO THE Consultant DASHBOARD!
+      WELCOME TO THE Landlord DASHBOARD!
       <button
         onClick={handleSignOut}
         className="ml-3.5 border-4 rounded-2xl cursor-pointer"

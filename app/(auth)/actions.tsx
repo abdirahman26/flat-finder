@@ -1,4 +1,6 @@
-import { supabase } from "@lib/utils/supabase";
+"use server"
+
+import { createClient } from '@/supabase/server'
 
 interface AuthUser {
   id: string;
@@ -25,6 +27,8 @@ export const signUpFunc = async (
   first_name: string,
   role: string
 ): Promise<SignUpResponse> => {
+  const supabase = await createClient();
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -60,6 +64,7 @@ export const signUpFunc = async (
 };
 
 export const signInFunc = async (email: string, password: string) => {
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -68,6 +73,7 @@ export const signInFunc = async (email: string, password: string) => {
 };
 
 export const signOutFunc = async () => {
+  const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
   return { error };
 };
