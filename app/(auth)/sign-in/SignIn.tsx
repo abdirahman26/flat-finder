@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -11,13 +12,38 @@ import GoogleAction from "@/components/GoogleActions";
 import Seperator from "@/components/Sperator";
 import StyledInput from "@/components/StyledInput";
 import StyledButton from "@/components/StyledButton";
+import { signInFunc } from "@/app/(auth)/actions";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/utils/supabase";
+import { checkSession } from '@/lib/utils/supabase'
 
 const Login = () => {
-  const form = useForm();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // Prevents multiple submissions
 
-  const handleLogin = () => {
-    console.log("Logging in...");
+  const form = useForm();
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    try{
+    setLoading(true);
+
+    const { data, error } = await signInFunc(email, password);
+
+    if (error) {
+      console.log(error);
+      setLoading(false);
+      return;
+    }
+
+  } catch (error) {
+    console.error("Login error:", error);
+  } finally {
+    setLoading(false);
+  }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
@@ -52,6 +78,10 @@ const Login = () => {
                       placeholder="Email"
                       validationProps={field}
                       type="email"
+                      onInput={(e) => {
+                        // @ts-ignore
+                        setEmail(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-red-400 text-sm mt-1" />
@@ -67,6 +97,10 @@ const Login = () => {
                       placeholder="Password"
                       validationProps={field}
                       type="password"
+                      onInput={(e) => {
+                        // @ts-ignore
+                        setPassword(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-red-400 text-sm mt-1" />

@@ -6,15 +6,19 @@ interface StyledInputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
 }
 
-const StyledInput: React.FC<StyledInputProps> = ({
+const StyledInput = ({
   validationProps,
   className,
   ...props
-}) => {
+}: StyledInputProps) => {
+  const { value = "", onChange, onBlur } = validationProps || {};
+
   return (
     <input
-      {...validationProps}
       {...props}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
       className={cn("w-full input-with-lime-focus animate-fade-in", className)}
     />
   );

@@ -18,7 +18,7 @@ const StyledButton: React.FC<StyledButtonProps> = ({
     <button
       disabled={disabled}
       className={cn(
-        "lime-button w-full mt-2 relative overflow-hidden group",
+        "cursor-pointer lime-button w-full mt-2 relative overflow-hidden group",
         {
           "opacity-70 cursor-not-allowed": disabled,
         },

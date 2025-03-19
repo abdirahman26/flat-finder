@@ -1,5 +1,6 @@
-import React from "react";
-import { useForm } from "react-hook-form";
+"use client";
+import React, { useState } from "react";
+import { set, useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -11,18 +12,38 @@ import GoogleAction from "@/components/GoogleActions";
 import Seperator from "@/components/Sperator";
 import StyledInput from "@/components/StyledInput";
 import StyledButton from "@/components/StyledButton";
-import { Checkbox } from "@components/ui/checkbox";
 import { Check } from "lucide-react";
+import StyledDropdown from "@/components/StyledDropdown";
+import { signUpFunc } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
 
 const SignUp = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
+  const [name, setName] = useState("");
+  const [idNumber, setIdNumber] = useState(0);
+  const [checked, setChecked] = useState(false);
+
   const form = useForm();
   const router = useRouter();
 
-  const handleSignUp = () => {
-    console.log("Signed up...");
-  };
+  const handleSignUp = async () => {
+    const { data, error } = await signUpFunc(
+      email,
+      password,
+      idNumber,
+      name,
+      role
+    );
 
+    if (error) {
+      console.log(error);
+    } else {
+      router.replace("/consultant");
+      console.log(data);
+    }
+  };
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="glass-panel max-w-md w-full p-8 md:p-10 shadow-2xl animate-slide-up">
@@ -34,7 +55,7 @@ const SignUp = () => {
         </div>
 
         <GoogleAction
-          handleClick={() => handleSignUp()}
+          handleClick={() => console.log("Google Sign Up")}
           text="Sign up with Google"
         />
         <Seperator>Or</Seperator>
@@ -54,15 +75,56 @@ const SignUp = () => {
                   <FormItem>
                     <FormControl>
                       <StyledInput
-                        placeholder="Full Name"
+                        placeholder="First Name"
                         validationProps={field}
                         type="text"
+                        onInput={(e) => {
+                          // @ts-ignore
+                          setName(e.target.value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage className="text-red-400 text-sm mt-1" />
                   </FormItem>
                 )}
               />
+              <FormField
+                name="id_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <StyledInput
+                        placeholder="ID Number"
+                        validationProps={field}
+                        type="text"
+                        onInput={(e) => {
+                          // @ts-ignore
+                          setIdNumber(e.target.value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-sm mt-1" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <StyledDropdown
+                        options={["Consultant", "Landlord"]}
+                        selected={role}
+                        onChange={(value) => {
+                          setRole(value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-sm mt-1" />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 name="email"
                 render={({ field }) => (
@@ -72,6 +134,10 @@ const SignUp = () => {
                         placeholder="Email"
                         validationProps={field}
                         type="email"
+                        onInput={(e) => {
+                          // @ts-ignore
+                          setEmail(e.target.value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage className="text-red-400 text-sm mt-1" />
@@ -87,50 +153,43 @@ const SignUp = () => {
                         placeholder="Password"
                         validationProps={field}
                         type="password"
+                        onInput={(e) => {
+                          // @ts-ignore
+                          setPassword(e.target.value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage className="text-red-400 text-sm mt-1" />
                   </FormItem>
                 )}
               />
-              <FormField
-                name="terms"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-2">
-                    <FormControl>
-                      <div className="flex items-center space-x-2">
-                        <div className="h-5 w-5 rounded border border-white/20 flex items-center justify-center bg-white/5 cursor-pointer">
-                          {field.value && (
-                            <Check className="h-4 w-4 text-custom-lime" />
-                          )}
-                          <input
-                            type="checkbox"
-                            className="opacity-0 absolute h-5 w-5 cursor-pointer"
-                            {...field}
-                          />
-                        </div>
-                        <label className="text-sm text-white/80 cursor-pointer">
-                          I agree to the{" "}
-                          <a
-                            href="#"
-                            className="text-custom-lime hover:underline"
-                          >
-                            Terms of Service
-                          </a>{" "}
-                          and{" "}
-                          <a
-                            href="#"
-                            className="text-custom-lime hover:underline"
-                          >
-                            Privacy Policy
-                          </a>
-                        </label>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-sm mt-1" />
-                  </FormItem>
-                )}
-              />
+
+              {/* checkbox */}
+              <div className="flex items-center space-x-2">
+                <div className="h-5 w-5 rounded border border-white/20 flex items-center justify-center bg-white/5 cursor-pointer">
+                  <input
+                    required
+                    checked={checked}
+                    onChange={(e) => {
+                      setChecked(!checked);
+                    }}
+                    type="checkbox"
+                    className="opacity-0 absolute h-5 w-5 cursor-pointer"
+                  />
+                  {checked && <Check className="h-4 w-4 text-custom-lime" />}
+                </div>
+
+                <label className="text-sm text-white/80 cursor-pointer">
+                  I agree to the{" "}
+                  <a href="#" className="text-custom-lime hover:underline">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="#" className="text-custom-lime hover:underline">
+                    Privacy Policy
+                  </a>
+                </label>
+              </div>
             </div>
 
             <StyledButton
