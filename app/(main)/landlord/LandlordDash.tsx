@@ -28,7 +28,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
 import { toast } from "sonner";
-import { SignOut } from "@supabase/supabase-js";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -48,12 +47,6 @@ const LandlordDash = () => {
   // implement sign out
   const supabase = createClient();
   const router = useRouter();
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error("Sign out error:", error);
-    router.push("/sign-in");
-  };
 
   // Sample initial data for properties
   const [properties, setProperties] = useState<PropertyListing[]>([
@@ -154,13 +147,6 @@ const LandlordDash = () => {
             Manage your property listings
           </p>
         </div>
-        <Button
-          onClick={handleSignOut}
-          className="bg-accent text-accent-foreground hover:bg-accent/80"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
         <Dialog>
           <DialogTrigger asChild>
             <Button className="bg-accent text-accent-foreground hover:bg-accent/80">
