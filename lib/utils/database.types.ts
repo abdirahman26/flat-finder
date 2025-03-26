@@ -17,6 +17,7 @@ export type Database = {
           bedrooms: number
           city: string
           created_at: string
+          description: string
           id: string
           price: number
           title: string
@@ -28,6 +29,7 @@ export type Database = {
           bedrooms: number
           city: string
           created_at?: string
+          description: string
           id?: string
           price: number
           title: string
@@ -39,6 +41,7 @@ export type Database = {
           bedrooms?: number
           city?: string
           created_at?: string
+          description?: string
           id?: string
           price?: number
           title?: string

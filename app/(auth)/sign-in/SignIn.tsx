@@ -31,7 +31,6 @@ const Login = () => {
 
       const { error, role } = await signInFunc(email, password);
       router.replace(`/${role}`);
-      console.log(role);
 
       if (error) {
         console.log(error);
