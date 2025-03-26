@@ -1,6 +1,6 @@
-"use server"
+"use server";
 
-import { createClient } from '@/supabase/server'
+import { createClient } from "@/supabase/server";
 
 interface AuthUser {
   id: string;
@@ -65,11 +65,39 @@ export const signUpFunc = async (
 
 export const signInFunc = async (email: string, password: string) => {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  return { data, error };
+
+  // Step 1: Authenticate the user with Supabase
+  const { data: authData, error: authError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+  if (authError) {
+    // If there is an authentication error, return it
+    return { data: null, error: authError, role: null };
+  }
+
+  // Step 2: If the authentication is successful, fetch the user's role from the "users" table
+  if (authData?.user) {
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("role") // Selecting only the role column
+      .eq("id", authData.user.id) // Match the user's ID
+      .single(); // Only expect a single row for the authenticated user
+
+    if (userError || !userData) {
+      // If there is an error fetching the user's role, return an error
+      return { data: null, error: userError, role: null };
+    }
+
+    // Return the user data and role
+    const lowerCaseRole = userData.role.toLowerCase();
+    return { data: userData, error: null, role: lowerCaseRole };
+  }
+
+  // If authentication fails, return null for the data and role
+  return { data: null, error: new Error("User not found"), role: null };
 };
 
 export const signOutFunc = async () => {
