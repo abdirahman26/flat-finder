@@ -18,9 +18,10 @@ export type Database = {
           city: string
           created_at: string
           description: string
-          id: string
+          listing_id: string
           price: number
           title: string
+          user_id: string
         }
         Insert: {
           area: string
@@ -30,9 +31,10 @@ export type Database = {
           city: string
           created_at?: string
           description: string
-          id?: string
+          listing_id?: string
           price: number
           title: string
+          user_id?: string
         }
         Update: {
           area?: string
@@ -42,15 +44,23 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string
-          id?: string
+          listing_id?: string
           price?: number
           title?: string
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "listings_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
