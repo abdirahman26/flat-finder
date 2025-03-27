@@ -30,6 +30,7 @@ import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
+import { addListing } from "@/app/(auth)/actions";
 
 // Define the PropertyListing type
 interface PropertyListing {
@@ -37,52 +38,27 @@ interface PropertyListing {
   title: string;
   description: string;
   price: number;
-  location: string;
+  city: string;
+  area: string;
   bedrooms: number;
   bathrooms: number;
-  imageUrl: string;
+  area_code: string;
 }
 
 const LandlordDash = () => {
-  // implement sign out
-  const supabase = createClient();
-  const router = useRouter();
-
   // Sample initial data for properties
-  const [properties, setProperties] = useState<PropertyListing[]>([
-    {
-      id: "1",
-      title: "Modern Downtown Apartment",
-      description:
-        "Stylish apartment in the heart of downtown with amazing city views and amenities.",
-      price: 1800,
-      location: "123 Main St, Downtown",
-      bedrooms: 2,
-      bathrooms: 2,
-      imageUrl: "/placeholder.svg",
-    },
-    {
-      id: "2",
-      title: "Cozy Suburban Home",
-      description:
-        "Family-friendly home with a spacious backyard in a quiet neighborhood.",
-      price: 2200,
-      location: "456 Oak Ave, Suburbia",
-      bedrooms: 3,
-      bathrooms: 2,
-      imageUrl: "/placeholder.svg",
-    },
-  ]);
+  const [properties, setProperties] = useState<PropertyListing[]>([]);
 
   // New property form state
   const [newProperty, setNewProperty] = useState<Omit<PropertyListing, "id">>({
     title: "",
     description: "",
     price: 0,
-    location: "",
+    city: "",
+    area: "",
     bedrooms: 1,
     bathrooms: 1,
-    imageUrl: "/placeholder.svg",
+    area_code: "",
   });
 
   // Property view state
@@ -104,27 +80,54 @@ const LandlordDash = () => {
   };
 
   // Add a new property
-  const handleAddProperty = () => {
+  const handleAddProperty = async () => {
     const newId = Date.now().toString();
+    const createdAt = new Date().toISOString();
     const propertyToAdd = {
       id: newId,
+      created_at: createdAt,
       ...newProperty,
     };
 
-    setProperties([...properties, propertyToAdd]);
+    try {
+      const { error } = await addListing(
+        propertyToAdd.area,
+        propertyToAdd.area_code,
+        propertyToAdd.bathrooms,
+        propertyToAdd.bedrooms,
+        propertyToAdd.city,
+        propertyToAdd.created_at,
+        propertyToAdd.description,
+        propertyToAdd.price,
+        propertyToAdd.title
+      );
 
-    // Reset form
-    setNewProperty({
-      title: "",
-      description: "",
-      price: 0,
-      location: "",
-      bedrooms: 1,
-      bathrooms: 1,
-      imageUrl: "/placeholder.svg",
-    });
+      if (error) {
+        toast.error("Failed to add listing. Please try again.");
+        console.error("Error adding listing:", error ?? "Unknown error");
+        console.log(error);
+        return;
+      }
 
-    toast.success("Property listing added successfully!");
+      setProperties([...properties, propertyToAdd]);
+
+      // Reset form
+      setNewProperty({
+        title: "",
+        description: "",
+        price: 0,
+        city: "",
+        area: "",
+        bedrooms: 1,
+        bathrooms: 1,
+        area_code: "",
+      });
+
+      toast.success("Property listing added successfully!");
+    } catch (err) {
+      console.error("Unexpected error adding listing:", err);
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   // Remove a property
@@ -204,13 +207,39 @@ const LandlordDash = () => {
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="location" className="text-right">
-                  Location
+                <label htmlFor="city" className="text-right">
+                  City
                 </label>
                 <Input
-                  id="location"
-                  name="location"
-                  value={newProperty.location}
+                  id="city"
+                  name="city"
+                  value={newProperty.city}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="area" className="text-right">
+                  Area
+                </label>
+                <Input
+                  id="area"
+                  name="area"
+                  value={newProperty.area}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="area_code" className="text-right">
+                  Zip-Code
+                </label>
+                <Input
+                  id="area_code"
+                  name="area_code"
+                  value={newProperty.area_code}
                   onChange={handleInputChange}
                   className="col-span-3"
                 />
@@ -290,7 +319,9 @@ const LandlordDash = () => {
                     <TableCell className="font-medium">
                       {property.title}
                     </TableCell>
-                    <TableCell>{property.location}</TableCell>
+                    <TableCell>
+                      {property.area}, {property.city}
+                    </TableCell>
                     <TableCell>${property.price}/month</TableCell>
                     <TableCell>{property.bedrooms}</TableCell>
                     <TableCell>{property.bathrooms}</TableCell>
@@ -331,19 +362,11 @@ const LandlordDash = () => {
               <DialogHeader>
                 <DialogTitle>{viewingProperty.title}</DialogTitle>
                 <DialogDescription>
-                  {viewingProperty.location}
+                  {viewingProperty.city}, {viewingProperty.area}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="grid gap-4 py-4">
-                <div className="aspect-video w-full bg-muted rounded-md overflow-hidden">
-                  <img
-                    src={viewingProperty.imageUrl}
-                    alt={viewingProperty.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="flex flex-col items-center justify-center p-2 border rounded-md">
                     <span className="text-muted-foreground">Price</span>

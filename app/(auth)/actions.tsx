@@ -106,10 +106,9 @@ export const signOutFunc = async () => {
   return { error };
 };
 
-export const pageRouting = async () => {
+export const navRouting = async () => {
   const supabase = await createClient();
 
-  // Step 1: Authenticate the user with Supabase
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
   if (authError) {
@@ -137,4 +136,54 @@ export const pageRouting = async () => {
 
   // If authentication fails, return null for the data and role
   return { data: null, error: new Error("User not found"), role: null };
+};
+
+export const addListing = async (
+  area: string,
+  area_code: string,
+  bathrooms: number,
+  bedrooms: number,
+  city: string,
+  created_at: string,
+  description: string,
+  price: number,
+  title: string
+) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error("Error fetching user:", error);
+    return { data: null, error };
+  }
+
+  if (data?.user) {
+    const { data: insertData, error: insertError } = await supabase
+      .from("listings")
+      .insert([
+        {
+          area,
+          area_code,
+          bathrooms,
+          bedrooms,
+          city,
+          created_at,
+          description,
+          user_id: data.user.id,
+          price,
+          title,
+        },
+      ])
+      .select();
+
+    if (insertError) {
+      console.error("Error inserting listing:", insertError);
+      return { data: null, error: insertError };
+    }
+
+    return { data: insertData ? insertData[0] : null, error: null };
+  }
+
+  return { data: null, error: "No authenticated user found" };
 };
