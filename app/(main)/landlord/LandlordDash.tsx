@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,11 +30,11 @@ import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
-import { addListing } from "@/app/(auth)/actions";
+import { addListing, getListing, removeListing } from "@/app/(auth)/actions";
 
 // Define the PropertyListing type
 interface PropertyListing {
-  id: string;
+  listing_id: string;
   title: string;
   description: string;
   price: number;
@@ -50,7 +50,9 @@ const LandlordDash = () => {
   const [properties, setProperties] = useState<PropertyListing[]>([]);
 
   // New property form state
-  const [newProperty, setNewProperty] = useState<Omit<PropertyListing, "id">>({
+  const [newProperty, setNewProperty] = useState<
+    Omit<PropertyListing, "listing_id">
+  >({
     title: "",
     description: "",
     price: 0,
@@ -64,6 +66,37 @@ const LandlordDash = () => {
   // Property view state
   const [viewingProperty, setViewingProperty] =
     useState<PropertyListing | null>(null);
+
+  const fetchListings = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const landlordId = authData.user.id;
+      const { listingData, listingError } = await getListing(landlordId);
+
+      if (listingError) {
+        console.error("Error fetching listings:", listingError);
+        toast.error("Failed to load listings.");
+      } else if (listingData) {
+        setProperties(Array.isArray(listingData) ? listingData : [listingData]); // Handle single or multiple results
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
 
   // Handle input changes for new property form
   const handleInputChange = (
@@ -84,7 +117,7 @@ const LandlordDash = () => {
     const newId = Date.now().toString();
     const createdAt = new Date().toISOString();
     const propertyToAdd = {
-      id: newId,
+      listing_id: newId,
       created_at: createdAt,
       ...newProperty,
     };
@@ -131,9 +164,26 @@ const LandlordDash = () => {
   };
 
   // Remove a property
-  const handleRemoveProperty = (id: string) => {
-    setProperties(properties.filter((property) => property.id !== id));
-    toast.success("Property listing removed successfully!");
+  const handleRemoveProperty = async (id: string) => {
+    try {
+      const { listingError } = await removeListing(id);
+
+      if (listingError) {
+        toast.error("Failed to remove listing from database.");
+        console.error("Error removing listing:", listingError);
+        return;
+      }
+
+      // Remove from UI state after successful deletion
+      setProperties((prevProperties) =>
+        prevProperties.filter((property) => property.listing_id !== id)
+      );
+
+      toast.success("Property listing removed successfully!");
+    } catch (err) {
+      console.error("Unexpected error removing listing:", err);
+      toast.error("An unexpected error occurred.");
+    }
   };
 
   // View property details
@@ -315,7 +365,7 @@ const LandlordDash = () => {
                 </TableRow>
               ) : (
                 properties.map((property) => (
-                  <TableRow key={property.id}>
+                  <TableRow key={property.listing_id}>
                     <TableCell className="font-medium">
                       {property.title}
                     </TableCell>
@@ -337,7 +387,9 @@ const LandlordDash = () => {
                         <Button
                           variant="destructive"
                           size="icon"
-                          onClick={() => handleRemoveProperty(property.id)}
+                          onClick={() =>
+                            handleRemoveProperty(property.listing_id)
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
