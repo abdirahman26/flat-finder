@@ -10,9 +10,8 @@ function MainLayout({
 }>) {
   return (
     <>
-      {" "}
-      {children}
-      <Nav />
+      <Nav /> {}
+      {children} {}
     </>
   );
 }

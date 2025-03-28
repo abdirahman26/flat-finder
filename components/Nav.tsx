@@ -45,7 +45,7 @@ const Nav = () => {
   };
 
   return (
-    <nav className="bg-transparent fixed top-0 left-0 w-full z-50 px-8 py-4">
+    <nav className="bg-transparent w-full z-50 px-8 py-4">
       <div className="relative max-w-7xl mx-auto flex items-center h-16">
         <div className="text-3xl font-bold text-gray-900 tracking-tight mr-auto">
           FDM
