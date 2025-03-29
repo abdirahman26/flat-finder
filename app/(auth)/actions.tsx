@@ -236,13 +236,61 @@ export const removeListing = async (listing_id: string) => {
 
 export const updateListing = async () => {};
 
-export const getUser = async () => {
+// export const getUser = async () => {
+//   const supabase = await createClient();
+//   const { data, error } = await supabase.auth.getUser();
+
+//   if (error) {
+//     console.error("Error fetching user:", error);
+//   }
+
+//   return { data, error };
+// };
+
+export const getUserDetails = async () => {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
 
-  if (error) {
-    console.error("Error fetching user:", error);
+  if (error || !data?.user) {
+    console.error("Error fetching auth user:", error);
+    return { data: null, error };
   }
 
-  return { data, error };
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", data.user.id)
+    .single();
+
+  if (userError) {
+    console.error("Error fetching user details:", userError);
+    return { data: null, error: userError };
+  }
+
+  return { data: userData, error: null };
+};
+
+export const getInitials = async () => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    console.error("Error fetching auth user:", error);
+    return { initials: null, error };
+  }
+
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("first_name")
+    .eq("id", data.user.id)
+    .single();
+
+  if (userError || !userData?.first_name) {
+    console.error("Error fetching user details:", userError);
+    return { initials: null, error: userError };
+  }
+
+  const initials = userData.first_name.charAt(0).toUpperCase();
+
+  return { initials, error: null };
 };

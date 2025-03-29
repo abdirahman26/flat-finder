@@ -10,21 +10,122 @@ import {
   MapPin,
   User,
   Building,
+  Mail,
+  IdCard,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { createClient } from "@/supabase/client";
+import { getListing, getUserDetails } from "@/app/(auth)/actions";
+import { toast } from "sonner";
+import { set } from "react-hook-form";
+
+interface PropertyListing {
+  listing_id: string;
+  title: string;
+  description: string;
+  price: number;
+  city: string;
+  area: string;
+  bedrooms: number;
+  bathrooms: number;
+  area_code: string;
+}
+
+interface UserData {
+  first_name: string;
+  created_at: string;
+  email: string;
+  id_number: number;
+}
 
 const LandlordProfile = () => {
   const [mounted, setMounted] = useState(false);
+  const [properties, setProperties] = useState<PropertyListing[]>([]);
+  const [userData, setUserData] = useState<UserData>({
+    first_name: "",
+    created_at: "",
+    email: "",
+    id_number: 0o000,
+  });
+  const [intials, setInitials] = useState("");
+
+  const fetchListings = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const landlordId = authData.user.id;
+      const { listingData, listingError } = await getListing(landlordId);
+
+      if (listingError) {
+        console.error("Error fetching listings:", listingError);
+        toast.error("Failed to load listings.");
+      } else if (listingData) {
+        setProperties(Array.isArray(listingData) ? listingData : [listingData]);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
+  const formatDate = (isoString: string) => {
+    return new Date(isoString).toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const { data: userData, error: userError } = await getUserDetails();
+
+      if (userError) {
+        console.error("Error fetching user details:", userError);
+        toast.error("Failed to retrieve user details.");
+        return;
+      } else if (userData) {
+        setUserData({
+          ...userData,
+          created_at: formatDate(userData.created_at),
+        });
+        setInitials(userData.first_name.charAt(0).toUpperCase());
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching user data:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
+    fetchListings();
+    fetchUserData();
   }, []);
 
-  //mock data for user and listings
+  // mock data for user and listings
   const user = {
     name: "Sophie",
     joinDate: "Joined January 2019",
@@ -48,38 +149,38 @@ const LandlordProfile = () => {
   };
 
   // Mock listings data
-  const listings = [
-    {
-      id: 1,
-      title: "Mountain View Cabin",
-      location: "Aspen, Colorado",
-      price: "$195/night",
-      rating: 4.97,
-      reviews: 68,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      superhost: false,
-    },
-    {
-      id: 2,
-      title: "Urban Loft with Skyline View",
-      location: "Seattle, Washington",
-      price: "$135/night",
-      rating: 4.89,
-      reviews: 43,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-      superhost: false,
-    },
-    {
-      id: 3,
-      title: "Cozy Studio in Historic District",
-      location: "Portland, Oregon",
-      price: "$105/night",
-      rating: 4.85,
-      reviews: 41,
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
-      superhost: false,
-    },
-  ];
+  // const listings = [
+  //   {
+  //     id: 1,
+  //     title: "Mountain View Cabin",
+  //     location: "Aspen, Colorado",
+  //     price: "$195/night",
+  //     rating: 4.97,
+  //     reviews: 68,
+  //     image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
+  //     superhost: false,
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "Urban Loft with Skyline View",
+  //     location: "Seattle, Washington",
+  //     price: "$135/night",
+  //     rating: 4.89,
+  //     reviews: 43,
+  //     image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
+  //     superhost: false,
+  //   },
+  //   {
+  //     id: 3,
+  //     title: "Cozy Studio in Historic District",
+  //     location: "Portland, Oregon",
+  //     price: "$105/night",
+  //     rating: 4.85,
+  //     reviews: 41,
+  //     image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
+  //     superhost: false,
+  //   },
+  // ];
 
   return (
     <div
@@ -120,12 +221,12 @@ const LandlordProfile = () => {
             >
               <div className="flex flex-col items-center text-center mb-4">
                 <Avatar className="flex items-center justify-center h-24 w-24 bg-custom-lime text-dark mb-4">
-                  <span className="text-3xl font-semibold">{user.avatar}</span>
+                  <span className="text-3xl font-semibold">{intials}</span>
                 </Avatar>
                 <h1 className="text-gray-300 text-2xl font-semibold mb-1">
-                  {user.name}
+                  {userData.first_name}
                 </h1>
-                <p className="text-gray-400 text-sm">{user.joinDate}</p>
+                <p className="text-gray-400 text-sm">{userData.created_at}</p>
 
                 {user.verified && (
                   <Badge className="mt-2 bg-dark border border-custom-lime text-custom-lime">
@@ -138,16 +239,18 @@ const LandlordProfile = () => {
 
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <MapPin className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
-                  <p className="text-sm text-gray-300">{user.location}</p>
+                  <Mail className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
+                  <p className="text-sm text-gray-300">{userData.email}</p>
                 </div>
 
                 <div className="flex items-start">
-                  <User className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
-                  <p className="text-sm text-gray-300">{user.bio}</p>
+                  <IdCard className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
+                  <p className="text-sm text-gray-300">
+                    {userData.id_number.toString()}
+                  </p>
                 </div>
 
-                <div className="flex items-start">
+                {/* <div className="flex items-start">
                   <MessageCircle className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
                   <div>
                     <p className="text-sm text-white font-medium">Languages</p>
@@ -155,9 +258,9 @@ const LandlordProfile = () => {
                       {user.languages.join(", ")}
                     </p>
                   </div>
-                </div>
+                </div> */}
 
-                <div className="flex items-start">
+                {/* <div className="flex items-start">
                   <Building className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
                   <div>
                     <p className="text-sm text-white font-medium">
@@ -170,7 +273,7 @@ const LandlordProfile = () => {
                       Typically responds {user.responseTime}
                     </p>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               <div className="mt-6">
@@ -180,7 +283,7 @@ const LandlordProfile = () => {
               </div>
             </div>
 
-            <div
+            {/* <div
               className="glass-card p-6 mt-6 animate-slide-up"
               style={{ animationDelay: "0.2s" }}
             >
@@ -211,35 +314,35 @@ const LandlordProfile = () => {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div
               className="glass-card p-6 mt-6 animate-slide-up"
               style={{ animationDelay: "0.3s" }}
             >
               <h2 className="text-lg font-semibold mb-4 text-custom-lime flex items-center">
-                <Home className="mr-2 h-5 w-5" /> Traveler Stats
+                <Home className="mr-2 h-5 w-5" /> Landlord Stats
               </h2>
 
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Total Trips</span>
+                <div className="flex justify-between text-gray-300">
+                  <span>Total Properties</span>
                   <span className="font-medium">
                     {user.tripStats.totalTrips}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span className="text-gray-300">Countries Visited</span>
                   <span className="font-medium">
                     {user.tripStats.countries}
                   </span>
-                </div>
-                <div className="flex justify-between">
+                </div> */}
+                {/* <div className="flex justify-between">
                   <span className="text-gray-300">Upcoming Trips</span>
                   <span className="font-medium">
                     {user.tripStats.upcomingTrips}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -252,47 +355,45 @@ const LandlordProfile = () => {
               style={{ animationDelay: "0.4s" }}
             >
               <h2 className="text-xl font-semibold mb-6 text-custom-lime flex items-center">
-                <Building className="mr-2 h-5 w-5" /> Sophie's Listings
+                <Building className="mr-2 h-5 w-5" /> {userData.first_name}'s
+                Listings
               </h2>
 
               <div className="space-y-6">
-                {listings.map((listing) => (
+                {properties.map((listing) => (
                   <Card
-                    key={listing.id}
+                    key={listing.listing_id}
                     className="bg-dark/60 border border-white/10 overflow-hidden hover:border-custom-lime/50 transition-all duration-300"
                   >
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/3 h-48 md:h-auto relative">
                         <img
-                          src={listing.image}
+                          // src={listing.image}
                           alt={listing.title}
                           className="w-full h-full object-cover"
                         />
-                        {listing.superhost && (
-                          <div className="absolute top-2 left-2">
-                            <Badge className="bg-custom-lime text-dark">
-                              Superhost
-                            </Badge>
-                          </div>
-                        )}
                       </div>
                       <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
                         <div>
-                          <h3 className="font-semibold text-lg mb-1">
+                          <h3 className="font-semibold text-lg mb-1 text-white">
                             {listing.title}
                           </h3>
                           <p className="text-gray-400 text-sm flex items-center mb-2">
-                            <MapPin className="h-3 w-3 mr-1" />{" "}
-                            {listing.location}
+                            <MapPin className="h-3 w-3 mr-1" /> {listing.area},{" "}
+                            {listing.city}
                           </p>
                           <p className="text-custom-lime font-medium mb-2">
-                            {listing.price}
+                            £{listing.price}
                           </p>
                           <div className="flex items-center">
-                            <Star className="h-4 w-4 text-custom-lime fill-custom-lime mr-1" />
-                            <span className="mr-1">{listing.rating}</span>
+                            <Star className="h-4 w-4 text-custom-lime fill-custom-lime mr-1 " />
+                            <span className="mr-1 text-white">
+                              {/* {listing.rating} */}
+                              4.97
+                            </span>
                             <span className="text-gray-400 text-sm">
-                              ({listing.reviews} reviews)
+                              {/* ({listing.reviews} reviews) */}
+                              Listing reviews here
                             </span>
                           </div>
                         </div>
