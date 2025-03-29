@@ -233,3 +233,16 @@ export const removeListing = async (listing_id: string) => {
     listingError: new Error("User not authenticated"),
   };
 };
+
+export const updateListing = async () => {};
+
+export const getUser = async () => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error("Error fetching user:", error);
+  }
+
+  return { data, error };
+};
