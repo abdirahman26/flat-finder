@@ -10,14 +10,8 @@ function MainLayout({
 }>) {
   return (
     <>
-      <Nav />
-      <div
-        className="mt-14
-      "
-      >
-        {" "}
-        {children}
-      </div>
+      <Nav /> {}
+      {children} {}
     </>
   );
 }
