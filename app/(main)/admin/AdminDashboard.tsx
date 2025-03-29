@@ -2,6 +2,7 @@
 import React from "react";
 import { signOutFunc } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
+import { SectionCards } from "@/components/SectionCards";
 
 function Page() {
   const router = useRouter();
@@ -17,16 +18,9 @@ function Page() {
     }
   };
   return (
-    <div className="container mx-auto py-0 px-4">
-      <div className="flex items-center justify-center text-4xl text-custom-lime">
-      WELCOME TO THE Admin DASHBOARD!
-      <button
-        onClick={handleSignOut}
-        className="ml-3.5 border-4 rounded-2xl cursor-pointer"
-      >
-        Sign Out
-      </button>
-    </div>
+  
+    <div className="">
+      <SectionCards />
     </div>
   );
 }
