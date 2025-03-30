@@ -65,6 +65,8 @@ export default {
                 custom: {
                     'dark': '#1E1E1E',
                     'lime': '#C5FF00',
+										'gray-hover': '#27272A',     
+										'gray-selected': '#3F3F46',
                 }
 			},
 			fontFamily: {
