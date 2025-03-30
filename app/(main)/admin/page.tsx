@@ -8,12 +8,10 @@ function Page() {
   return (
     <>
 
-    <div className="px-8">
+    <div className="px-8 space-y-8">
       <AdminDashboard />
     </div>
-   
     </>
-
 
   );
 }
