@@ -64,8 +64,10 @@ const LandlordDash = () => {
   });
 
   // Property view state
-  const [viewingProperty, setViewingProperty] =
-    useState<PropertyListing | null>(null);
+  const [viewingProperty, setViewingProperty] = useState<Omit<
+    PropertyListing,
+    "listing_id"
+  > | null>(null);
 
   const fetchListings = async () => {
     try {
