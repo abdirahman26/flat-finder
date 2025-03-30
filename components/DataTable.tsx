@@ -53,7 +53,7 @@ import {
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { useIsMobile } from "@/hooks/use-mobile"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -604,10 +604,8 @@ export function DataTable({
 }
 
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-  const isMobile = useIsMobile()
-
   return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
+    <Drawer direction="right">
       <DrawerTrigger asChild>
         <Button variant="link" className="text-muted w-fit px-0 text-left">
           {item.listingTitle.length > 30 ? `${item.listingTitle.slice(0, 30)}...` : item.listingTitle}
