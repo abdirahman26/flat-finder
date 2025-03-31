@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      complaints: {
+        Row: {
+          complaint_id: string
+          created_at: string
+          description: string | null
+          title: string | null
+        }
+        Insert: {
+          complaint_id?: string
+          created_at?: string
+          description?: string | null
+          title?: string | null
+        }
+        Update: {
+          complaint_id?: string
+          created_at?: string
+          description?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           area: string
@@ -18,6 +39,7 @@ export type Database = {
           city: string
           created_at: string
           description: string
+          is_verified: boolean
           listing_id: string
           price: number
           title: string
@@ -31,6 +53,7 @@ export type Database = {
           city: string
           created_at?: string
           description: string
+          is_verified?: boolean
           listing_id?: string
           price: number
           title: string
@@ -44,6 +67,7 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string
+          is_verified?: boolean
           listing_id?: string
           price?: number
           title?: string
@@ -73,6 +97,7 @@ export type Database = {
           first_name: string
           id: string
           id_number: number
+          is_verified: boolean
           role: string
         }
         Insert: {
@@ -81,6 +106,7 @@ export type Database = {
           first_name: string
           id?: string
           id_number: number
+          is_verified?: boolean
           role: string
         }
         Update: {
@@ -89,6 +115,7 @@ export type Database = {
           first_name?: string
           id?: string
           id_number?: number
+          is_verified?: boolean
           role?: string
         }
         Relationships: []
