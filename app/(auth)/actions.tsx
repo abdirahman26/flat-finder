@@ -1,6 +1,8 @@
 "use server";
 
+
 import { createClient } from "@/supabase/server";
+import { subDays, formatISO } from "date-fns";
 
 interface AuthUser {
   id: string;
@@ -137,4 +139,120 @@ export const pageRouting = async () => {
 
   // If authentication fails, return null for the data and role
   return { data: null, error: new Error("User not found"), role: null };
+};
+
+
+export const getPendingListingsCount = async (): Promise<number> => {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("listings")
+    .select("*", { count: "exact", head: true })
+    .eq("is_verified", false);
+
+  if (error) {
+    console.error("Error fetching pending listings count:", error);
+    return 0;
+  }
+
+  return count ?? 0;
+};
+
+export const getUserSignupsStats = async (): Promise<{
+  past7DaysCount: number;
+  todayCount: number;
+}> => {
+  const supabase = await createClient();
+
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const sevenDaysAgoISO = sevenDaysAgo.toISOString();
+  const todayStartISO = todayStart.toISOString();
+
+  const [{ count: past7DaysCount, error: error7d }, { count: todayCount, error: errorToday }] =
+    await Promise.all([
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", sevenDaysAgoISO),
+
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", todayStartISO),
+    ]);
+
+  if (error7d || errorToday) {
+    console.error("Error fetching user signup stats:", error7d || errorToday);
+    return { past7DaysCount: 0, todayCount: 0 };
+  }
+
+  return {
+    past7DaysCount: past7DaysCount ?? 0,
+    todayCount: todayCount ?? 0,
+  };
+};
+
+export const getVerifiedListingsCount = async (): Promise<number> => {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("listings")
+    .select("*", { count: "exact", head: true })
+    .eq("is_verified", true);
+
+  if (error) {
+    console.error("Error fetching verified listings count:", error);
+    return 0;
+  }
+
+  return count ?? 0;
+};
+
+
+
+export const getUnresolvedComplaintsCount = async (): Promise<number> => {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("complaints")
+    .select("*", { count: "exact", head: true })
+    .neq("status", "resolved"); // status NOT EQUAL to 'resolved'
+
+  if (error) {
+    console.error("Error fetching unresolved complaints count:", error);
+    return 0;
+  }
+
+  return count ?? 0;
+};
+
+export const getAllListingsOrderedByStatus = async () => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select(`
+      id,
+      title,
+      city,
+      area_code,
+      is_verified,
+      reviewer,
+      users (
+        email,
+        first_name
+      )
+    `)
+    .order("is_verified", { ascending: true }); // false first, then true
+
+  if (error) {
+    console.error("Error fetching listings:", error);
+    return [];
+  }
+  return data ?? [];
 };

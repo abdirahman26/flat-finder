@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconX } from "@tabler/icons-react" 
+import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
 import {
   DndContext,
   KeyboardSensor,
@@ -208,7 +209,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: "Landlord Name",
     cell: ({ row }) => {
       const name = row.original.landlordName
-      const displayName = name.length > 30 ? `${name.slice(0, 30)}...` : name
+      const displayName = name.length > 20 ? `${name.slice(0, 20)}...` : name
   
       return (
         <div className="truncate text-sm text-muted">{displayName}</div>
@@ -221,7 +222,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: "Landlord Email",
     cell: ({ row }) => {
       const email = row.original.landlordEmail
-      const displayEmail = email.length > 30 ? `${email.slice(0, 30)}...` : email
+      const displayEmail = email.length > 20 ? `${email.slice(0, 20)}...` : email
   
       return (
         <div className="truncate text-sm text-muted">{displayEmail}</div>
@@ -262,6 +263,35 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       )
     },
   },
+  // {
+  //   id: "viewDelete",
+  //   header: "Actions",
+  //   cell: ({ row }) => {
+  //     const property = row.original
+  
+  //     return (
+  //       <TableCell className="">
+  //         <div className="flex gap-2">
+  //           <Button
+  //             variant="outline"
+  //             size="icon"
+  //             onClick={() => {}}
+  //           >
+  //             <Eye className="" />
+  //           </Button>
+  //           <Button
+  //             variant="destructive"
+  //             size="icon"
+  //             onClick={() => {}}
+  //           >
+  //             <Trash2 className="" />
+  //           </Button>
+  //         </div>
+  //       </TableCell>
+  //     )
+  //   },
+  // },
+
   {
     id: "actions",
     cell: () => (
@@ -608,7 +638,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
     <Drawer direction="right">
       <DrawerTrigger asChild>
         <Button variant="link" className="text-muted w-fit px-0 text-left">
-          {item.listingTitle.length > 30 ? `${item.listingTitle.slice(0, 30)}...` : item.listingTitle}
+          {item.listingTitle.length >20 ? `${item.listingTitle.slice(0, 20)}...` : item.listingTitle}
         </Button>
       </DrawerTrigger>
       <DrawerContent>

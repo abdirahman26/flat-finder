@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      complaints: {
+        Row: {
+          complaint_id: string
+          created_at: string
+          description: string | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          complaint_id?: string
+          created_at?: string
+          description?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          complaint_id?: string
+          created_at?: string
+          description?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           area: string
@@ -18,9 +42,12 @@ export type Database = {
           city: string
           created_at: string
           description: string
-          id: string
+          is_verified: boolean
+          listing_id: string
           price: number
+          reviewer: string | null
           title: string
+          user_id: string
         }
         Insert: {
           area: string
@@ -30,9 +57,12 @@ export type Database = {
           city: string
           created_at?: string
           description: string
-          id?: string
+          is_verified?: boolean
+          listing_id?: string
           price: number
+          reviewer?: string | null
           title: string
+          user_id?: string
         }
         Update: {
           area?: string
@@ -42,15 +72,25 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string
-          id?: string
+          is_verified?: boolean
+          listing_id?: string
           price?: number
+          reviewer?: string | null
           title?: string
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "listings_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -63,6 +103,7 @@ export type Database = {
           first_name: string
           id: string
           id_number: number
+          is_verified: boolean
           role: string
         }
         Insert: {
@@ -71,6 +112,7 @@ export type Database = {
           first_name: string
           id?: string
           id_number: number
+          is_verified?: boolean
           role: string
         }
         Update: {
@@ -79,6 +121,7 @@ export type Database = {
           first_name?: string
           id?: string
           id_number?: number
+          is_verified?: boolean
           role?: string
         }
         Relationships: []
