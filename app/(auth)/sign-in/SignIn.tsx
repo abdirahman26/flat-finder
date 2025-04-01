@@ -15,7 +15,7 @@ import StyledButton from "@/components/StyledButton";
 import { signInFunc } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/utils/supabase";
-import { checkSession } from '@/lib/utils/supabase'
+import { checkSession } from "@/lib/utils/supabase";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -26,24 +26,23 @@ const Login = () => {
   const router = useRouter();
 
   const handleLogin = async () => {
-    try{
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const { data, error } = await signInFunc(email, password);
+      const { error, role } = await signInFunc(email, password);
+      router.replace(`/${role}`);
 
-    if (error) {
-      console.log(error);
+      if (error) {
+        console.log(error);
+        setLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
       setLoading(false);
-      return;
     }
-
-  } catch (error) {
-    console.error("Login error:", error);
-  } finally {
-    setLoading(false);
-  }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">

@@ -1,6 +1,8 @@
 @config "../tailwind.config.ts";
 @import "tailwindcss";
 
+/* @custom-variant dark (&:is(.dark *)); */
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -150,18 +152,91 @@
   .glass-panel {
     @apply backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl;
   }
-  
+
   .input-with-lime-focus {
     @apply bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/50 
     focus:outline-none focus:ring-1 focus:ring-custom-lime transition-all duration-300;
   }
-  
+
   .lime-button {
     @apply bg-custom-lime text-custom-dark font-medium rounded-lg px-6 py-3 hover:bg-custom-lime/90
     transition-all duration-300 flex items-center justify-center;
   }
-  
+
   .smooth-transition {
     @apply transition-all duration-300 ease-in-out;
   }
+
+  .profile-header {
+    background-color: #7a40ff;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .profile-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: linear-gradient(to top, rgba(30, 30, 30, 0.8), transparent);
+    z-index: 1;
+  }
+  
+  .avatar-border {
+    @apply border-4 border-custom-dark;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .avatar-border:hover {
+    @apply border-accent;
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(197, 255, 0, 0.2);
+  }
+  
+  .glass-card {
+    @apply bg-custom-dark/90 backdrop-blur-md border border-white/10 rounded-xl;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .flag-icon {
+    @apply rounded-md overflow-hidden inline-block w-10 h-6 mx-1;
+    transition: transform 0.2s ease;
+  }
+  
+  .flag-icon:hover {
+    transform: scale(1.1);
+  }
+  
+  .nav-link {
+    @apply py-2 px-4 rounded-md transition-all duration-300;
+  }
+  
+  .nav-link:hover {
+    @apply bg-white/5;
+  }
+  
+  .nav-link.active {
+    @apply bg-accent text-custom-dark font-medium;
+  }
+  
+  .section-title {
+    @apply text-lg font-bold mb-4 text-accent;
+    border-bottom: 2px solid #c5ff00;
+    display: inline-block;
+    padding-bottom: 4px;
+  }
 }
+
+
+
+
+
