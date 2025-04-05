@@ -1,14 +1,13 @@
 import { cn } from "@/lib/utils";
-import React from "react";
 
 interface DropdownProps {
-  options: string[];
-  selected: string;
-  onChange: (value: string) => void;
+  options: ("Consultant" | "Landlord")[]; // Make options array more specific
+  selected: "Consultant" | "Landlord"; // Ensure selected value is one of these two
+  onChange: (value: "Consultant" | "Landlord") => void; // Update onChange to match
   className?: string;
 }
 
-const StyledDropdown = ({
+export const StyledDropdown = ({
   options,
   selected,
   onChange,
@@ -17,7 +16,7 @@ const StyledDropdown = ({
   return (
     <select
       value={selected}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value as "Consultant" | "Landlord")}
       className={cn("w-full input-with-lime-focus animate-fade-in", className)}
     >
       <option value="" disabled>
@@ -31,5 +30,3 @@ const StyledDropdown = ({
     </select>
   );
 };
-
-export default StyledDropdown;
