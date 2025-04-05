@@ -1,12 +1,14 @@
 "use client";
+
 import React from "react";
-import Consultant from "./Consultant";
+import ConsultantDash from "./ConsultantDash";
 
 function Page() {
-  return(
-  <Consultant/>
+  return (
+    <div>
+      <ConsultantDash />
+    </div>
   );
 }
-
 
 export default Page;
