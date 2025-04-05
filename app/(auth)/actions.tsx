@@ -211,6 +211,26 @@ export const getListing = async (listing_id: string) => {
   };
 };
 
+export const getAllListings = async () => {
+  const supabase = await createClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError) {
+    return { listingData: null, listingError: authError };
+  }
+
+  if (authData?.user) {
+    const { data, error } = await supabase.from("listings").select("*");
+
+    return { listingData: data ?? [], listingError: error ?? null };
+  }
+
+  return {
+    listingData: null,
+    listingError: new Error("User not authenticated"),
+  };
+};
+
 export const removeListing = async (listing_id: string) => {
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
