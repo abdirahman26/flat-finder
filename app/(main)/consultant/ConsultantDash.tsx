@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +22,8 @@ import {
   GripHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
+import { createClient } from "@/supabase/client";
+import { getAllListings, getUserDetails } from "@/app/(auth)/actions";
 
 // Define property type
 interface Property {
@@ -38,6 +42,25 @@ interface Property {
   watchlisted: boolean;
 }
 
+interface PropertyListing {
+  listing_id: string;
+  title: string;
+  description: string;
+  price: number;
+  city: string;
+  area: string;
+  bedrooms: number;
+  bathrooms: number;
+  area_code: string;
+}
+
+interface UserData {
+  first_name: string;
+  created_at: string;
+  email: string;
+  id_number: number;
+}
+
 const ConsultantDash = () => {
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +69,14 @@ const ConsultantDash = () => {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
+  const [initials, setInitials] = useState("");
+  const [userData, setUserData] = useState<UserData>({
+    first_name: "",
+    created_at: "",
+    email: "",
+    id_number: 0o000,
+  });
+  const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
 
   // Mock user data
   const user = {
@@ -164,10 +195,6 @@ const ConsultantDash = () => {
     "Downtown",
   ];
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Handle watchlist toggle
   const toggleWatchlist = (id: string) => {
     setProperties(
@@ -214,6 +241,77 @@ const ConsultantDash = () => {
     return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
   });
 
+  const fetchListings = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const { listingData, listingError } = await getAllListings();
+
+      if (listingError) {
+        console.error("Error fetching listings:", listingError);
+        toast.error("Failed to load listings.");
+      } else if (listingData) {
+        setPropertiess(
+          Array.isArray(listingData) ? listingData : [listingData]
+        );
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
+  const formatDate = (isoString: string) => {
+    return new Date(isoString).toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const { data: userData, error: userError } = await getUserDetails();
+
+      if (userError) {
+        console.error("Error fetching user details:", userError);
+        toast.error("Failed to retrieve user details.");
+        return;
+      } else if (userData) {
+        setUserData({
+          ...userData,
+        });
+        setInitials(userData.first_name.charAt(0).toUpperCase());
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching user data:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    fetchUserData();
+    fetchListings();
+  }, []);
   return (
     <div
       className={`min-h-screen bg-dark ${
@@ -222,10 +320,7 @@ const ConsultantDash = () => {
     >
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-10 glass-card bg-dark/90 backdrop-blur-lg px-4 py-3 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center">
-          <div className="text-accent font-semibold text-xl">Wanderlust</div>
-        </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-6 ">
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-accent text-dark text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -237,9 +332,11 @@ const ConsultantDash = () => {
           </Button>
           <div className="flex items-center bg-dark/60 rounded-full px-3 py-1 border border-white/10">
             <div className="h-8 w-8 bg-accent text-dark rounded-full flex items-center justify-center mr-2">
-              <span>{user.avatar}</span>
+              <span>{initials}</span>
             </div>
-            <span className="hidden md:inline-block text-sm">{user.name}</span>
+            <span className="hidden md:inline-block text-sm text-white">
+              {userData.first_name}
+            </span>
           </div>
         </div>
       </nav>
@@ -250,7 +347,7 @@ const ConsultantDash = () => {
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div>
               <h1 className="text-3xl font-bold text-white">
-                Welcome back, {user.name}
+                Welcome back, {userData.first_name}
               </h1>
               <p className="text-muted-foreground mt-1">
                 Browse properties or search for specific listings

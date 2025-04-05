@@ -46,7 +46,7 @@ function ConsultantProfile() {
     email: "",
     id_number: 0o000,
   });
-  const [intials, setInitials] = useState("");
+  const [initials, setInitials] = useState("");
 
   const formatDate = (isoString: string) => {
     return new Date(isoString).toLocaleString("en-US", {
@@ -104,7 +104,7 @@ function ConsultantProfile() {
           <div className="w-full md:w-2/3 bg-custom-dark p-8 rounded-2xl shadow-lg glass-card animate-slide-up">
             <div className="flex flex-col items-center text-center mb-6">
               <Avatar className="h-28 w-28 bg-custom-lime text-dark flex items-center justify-center mb-4 rounded-full">
-                <span className="text-4xl font-semibold">{intials}</span>
+                <span className="text-4xl font-semibold">{initials}</span>
               </Avatar>
               <h1 className="text-gray-300 text-3xl font-semibold mb-1">
                 {userData.first_name}
