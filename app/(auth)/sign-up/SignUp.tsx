@@ -1,6 +1,11 @@
 "use client";
-import React, { useState } from "react";
-import { set, useForm } from "react-hook-form";
+
+import React from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { signUpFunc } from "@/app/(auth)/actions";
+import { signUpSchema } from "@lib/schema";
 import {
   Form,
   FormControl,
@@ -8,42 +13,49 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import GoogleAction from "@/components/GoogleActions";
-import Seperator from "@/components/Sperator";
 import StyledInput from "@/components/StyledInput";
 import StyledButton from "@/components/StyledButton";
-import { Check } from "lucide-react";
-import StyledDropdown from "@/components/StyledDropdown";
-import { signUpFunc } from "@/app/(auth)/actions";
-import { useRouter } from "next/navigation";
+import GoogleAction from "@/components/GoogleActions";
+import Seperator from "@/components/Seperator";
+import { z } from "zod";
+import { StyledDropdown } from "@/components/StyledDropdown";
+
+export type SignUpFormData = z.infer<typeof signUpSchema>;
 
 const SignUp = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
-  const [name, setName] = useState("");
-  const [idNumber, setIdNumber] = useState(0);
-  const [checked, setChecked] = useState(false);
-
-  const form = useForm();
   const router = useRouter();
 
-  const handleSignUp = async () => {
-    const { data, error } = await signUpFunc(
-      email,
-      password,
-      idNumber,
-      name,
-      role
-    );
+  const form = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      idNumber: "" as unknown as number,
+      email: "",
+      password: "",
+      role: "" as unknown as "Consultant" | "Landlord",
+    },
+  });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
+
+  const onSubmit: SubmitHandler<SignUpFormData> = async (
+    data: SignUpFormData
+  ) => {
+    const { name, idNumber, email, password, role } = data;
+
+    const { error } = await signUpFunc(email, password, idNumber, name, role);
 
     if (error) {
       console.log(error);
     } else {
-      router.replace("/consultant");
-      console.log(data);
+      router.replace("/sign-up");
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="glass-panel max-w-md w-full p-8 md:p-10 shadow-2xl animate-slide-up">
@@ -61,142 +73,91 @@ const SignUp = () => {
         <Seperator>Or</Seperator>
 
         <Form {...form}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSignUp();
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-4">
-              <FormField
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StyledInput
-                        placeholder="First Name"
-                        validationProps={field}
-                        type="text"
-                        onInput={(e) => {
-                          // @ts-ignore
-                          setName(e.target.value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-sm mt-1" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="id_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StyledInput
-                        placeholder="ID Number"
-                        validationProps={field}
-                        type="text"
-                        onInput={(e) => {
-                          // @ts-ignore
-                          setIdNumber(e.target.value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-sm mt-1" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StyledDropdown
-                        options={["Consultant", "Landlord"]}
-                        selected={role}
-                        onChange={(value) => {
-                          setRole(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-sm mt-1" />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              name="name"
+              render={() => (
+                <FormItem>
+                  <FormControl>
+                    <StyledInput
+                      {...register("name")}
+                      placeholder="First Name"
+                      type="text"
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.name?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StyledInput
-                        placeholder="Email"
-                        validationProps={field}
-                        type="email"
-                        onInput={(e) => {
-                          // @ts-ignore
-                          setEmail(e.target.value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-sm mt-1" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StyledInput
-                        placeholder="Password"
-                        validationProps={field}
-                        type="password"
-                        onInput={(e) => {
-                          // @ts-ignore
-                          setPassword(e.target.value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-sm mt-1" />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              name="idNumber"
+              render={() => (
+                <FormItem>
+                  <FormControl>
+                    <StyledInput
+                      {...register("idNumber")}
+                      placeholder="ID Number"
+                      type="string"
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.idNumber?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
 
-              {/* checkbox */}
-              <div className="flex items-center space-x-2">
-                <div className="h-5 w-5 rounded border border-white/20 flex items-center justify-center bg-white/5 cursor-pointer">
-                  <input
-                    required
-                    checked={checked}
-                    onChange={(e) => {
-                      setChecked(!checked);
-                    }}
-                    type="checkbox"
-                    className="opacity-0 absolute h-5 w-5 cursor-pointer"
-                  />
-                  {checked && <Check className="h-4 w-4 text-custom-lime" />}
-                </div>
+            <FormField
+              name="role"
+              render={() => (
+                <FormItem>
+                  <FormControl>
+                    <StyledDropdown
+                      options={["Consultant", "Landlord"]}
+                      selected={form.watch("role") || ""}
+                      onChange={(value) => {
+                        form.setValue("role", value, { shouldValidate: true });
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.role?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="email"
+              render={() => (
+                <FormItem>
+                  <FormControl>
+                    <StyledInput
+                      {...register("email")}
+                      placeholder="Email"
+                      type="email"
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.email?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
 
-                <label className="text-sm text-white/80 cursor-pointer">
-                  I agree to the{" "}
-                  <a href="#" className="text-custom-lime hover:underline">
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a href="#" className="text-custom-lime hover:underline">
-                    Privacy Policy
-                  </a>
-                </label>
-              </div>
-            </div>
+            <FormField
+              name="password"
+              render={() => (
+                <FormItem>
+                  <FormControl>
+                    <StyledInput
+                      {...register("password")}
+                      placeholder="Password"
+                      type="password"
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.password?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
 
             <StyledButton
               label="Create Account"
-              additionalProps={{
-                type: "submit",
-              }}
+              additionalProps={{ type: "submit" }}
             />
           </form>
         </Form>
@@ -204,23 +165,10 @@ const SignUp = () => {
         <div className="flex flex-col items-center mt-8 animate-fade-in">
           <p className="text-white/80">
             Already have an account?{" "}
-            <a
-              href="/sign-in"
-              className="text-custom-lime hover:underline hover:brightness-110 transition-all duration-300"
-            >
+            <a href="/sign-in" className="text-custom-lime hover:underline">
               Sign in
             </a>
           </p>
-        </div>
-
-        <div className="mt-12 flex justify-center items-center gap-4 text-sm text-white/60 animate-fade-in">
-          <a className="text-lime hover:underline hover:brightness-110 transition-all duration-300">
-            Terms of Use
-          </a>
-          <div className="w-[1px] h-4 bg-white/20"></div>
-          <a className="text-lime hover:underline hover:brightness-110 transition-all duration-300">
-            Privacy Policy
-          </a>
         </div>
       </div>
     </div>

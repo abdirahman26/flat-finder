@@ -9,7 +9,7 @@ const GoogleAction: React.FC<GoogleActionProps> = ({ text, handleClick }) => {
   return (
     <button
       onClick={handleClick}
-      className="cursor-pointer w-full border border-white/20 bg-white/5 rounded-lg px-6 py-3 text-white flex items-center justify-center gap-3 hover:bg-white/10 transition-all duration-300 group animate-fade-in"
+      className="cursor-not-allowed  w-full border border-white/20 bg-white/5 rounded-lg px-6 py-3 text-white flex items-center justify-center gap-3 hover:bg-white/10 transition-all duration-300 group animate-fade-in"
     >
       <svg
         className="w-5 h-5"

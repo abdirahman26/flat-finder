@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import React from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -9,38 +9,46 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import GoogleAction from "@/components/GoogleActions";
-import Seperator from "@/components/Sperator";
+import Seperator from "@/components/Seperator";
 import StyledInput from "@/components/StyledInput";
 import StyledButton from "@/components/StyledButton";
 import { signInFunc } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/utils/supabase";
-import { checkSession } from "@/lib/utils/supabase";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); // Prevents multiple submissions
+import { signInSchema } from "@/lib/schema";
 
-  const form = useForm();
+export type SignInFormData = z.infer<typeof signInSchema>;
+
+const SignIn = () => {
   const router = useRouter();
 
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
+  const form = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-      const { error, role } = await signInFunc(email, password);
-      router.replace(`/${role}`);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
 
-      if (error) {
-        console.log(error);
-        setLoading(false);
-        return;
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setLoading(false);
+  const onSubmit: SubmitHandler<SignInFormData> = async (
+    data: SignInFormData
+  ) => {
+    const { email, password } = data;
+
+    const { error } = await signInFunc(email, password);
+
+    if (error) {
+      console.log(error);
+    } else {
+      router.replace("/sign-up");
     }
   };
 
@@ -54,58 +62,43 @@ const Login = () => {
           </h1>
         </div>
 
-        <GoogleAction
-          handleClick={() => handleLogin()}
-          text="Sign in with Google"
-        />
+        <GoogleAction handleClick={() => {}} text="Sign in with Google" />
         <Seperator>Or</Seperator>
 
         <Form {...form}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleLogin();
-            }}
-            className="space-y-4"
-          >
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               name="email"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormControl>
                     <StyledInput
+                      {...register("email")}
                       placeholder="Email"
-                      validationProps={field}
                       type="email"
-                      onInput={(e) => {
-                        // @ts-ignore
-                        setEmail(e.target.value);
-                      }}
                     />
                   </FormControl>
-                  <FormMessage className="text-red-400 text-sm mt-1" />
+                  <FormMessage>{errors.email?.message}</FormMessage>
                 </FormItem>
               )}
             />
+
             <FormField
               name="password"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormControl>
                     <StyledInput
+                      {...register("password")}
                       placeholder="Password"
-                      validationProps={field}
                       type="password"
-                      onInput={(e) => {
-                        // @ts-ignore
-                        setPassword(e.target.value);
-                      }}
                     />
                   </FormControl>
-                  <FormMessage className="text-red-400 text-sm mt-1" />
+                  <FormMessage>{errors.password?.message}</FormMessage>
                 </FormItem>
               )}
             />
+
             <StyledButton
               className="cursor-pointer"
               label="Sign In"
@@ -145,4 +138,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignIn;
