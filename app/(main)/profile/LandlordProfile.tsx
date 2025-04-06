@@ -51,7 +51,7 @@ const LandlordProfile = () => {
     email: "",
     id_number: 0o000,
   });
-  const [intials, setInitials] = useState("");
+  const [initials, setInitials] = useState("");
 
   const fetchListings = async () => {
     try {
@@ -149,7 +149,7 @@ const LandlordProfile = () => {
             >
               <div className="flex flex-col items-center text-center mb-4">
                 <Avatar className="flex items-center justify-center h-24 w-24 bg-custom-lime text-dark mb-4">
-                  <span className="text-3xl font-semibold">{intials}</span>
+                  <span className="text-3xl font-semibold">{initials}</span>
                 </Avatar>
                 <h1 className="text-gray-300 text-2xl font-semibold mb-1">
                   {userData.first_name}

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/supabase/server";
+import { ParamValue } from "next/dist/server/request/params";
 
 interface AuthUser {
   id: string;
@@ -211,6 +212,25 @@ export const getListing = async (listing_id: string) => {
   };
 };
 
+export const getListingById = async (userId: string | string[] | undefined) => {
+  if (!userId) {
+    return { data: null, error: new Error("No userId provided") };
+  }
+  const supabase = await createClient();
+
+  const id = Array.isArray(userId) ? userId[0] : userId;
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("user_id", id);
+
+  return {
+    listingData: data ?? [],
+    listingError: error ?? null,
+  };
+};
+
 export const getAllListings = async () => {
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -296,28 +316,26 @@ export const getUserDetails = async () => {
 
   return { data: userData, error: null };
 };
-
-export const getInitials = async () => {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error || !data?.user) {
-    console.error("Error fetching auth user:", error);
-    return { initials: null, error };
+export const getUserDetailsById = async (
+  userId: string | string[] | undefined
+) => {
+  if (!userId) {
+    return { data: null, error: new Error("No userId provided") };
   }
 
-  const { data: userData, error: userError } = await supabase
+  const id = Array.isArray(userId) ? userId[0] : userId;
+
+  const supabase = await createClient();
+  const { data: userData, error } = await supabase
     .from("users")
-    .select("first_name")
-    .eq("id", data.user.id)
+    .select("*")
+    .eq("id", id)
     .single();
 
-  if (userError || !userData?.first_name) {
-    console.error("Error fetching user details:", userError);
-    return { initials: null, error: userError };
+  if (error) {
+    console.error("Error fetching user details:", error);
+    return { data: null, error };
   }
 
-  const initials = userData.first_name.charAt(0).toUpperCase();
-
-  return { initials, error: null };
+  return { data: userData, error: null };
 };

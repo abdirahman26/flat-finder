@@ -24,6 +24,8 @@ import {
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
 import { getAllListings, getUserDetails } from "@/app/(auth)/actions";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Define property type
 interface Property {
@@ -81,6 +83,8 @@ const ConsultantDash = () => {
     id_number: 0o000,
   });
   const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
+
+  const router = useRouter();
 
   // Mock user data
   const user = {
@@ -309,6 +313,10 @@ const ConsultantDash = () => {
       console.error("Unexpected error fetching user data:", err);
       toast.error("An unexpected error occurred.");
     }
+  };
+
+  const handleProfileRoute = (userId: string) => {
+    router.push(`profile/${userId}`);
   };
 
   useEffect(() => {
@@ -629,6 +637,7 @@ const ConsultantDash = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleProfileRoute(listing.user_id)}
                         className="border-white/20 text-sm flex-1"
                       >
                         Contact Host
