@@ -1,0 +1,460 @@
+[
+  {
+    "id": 1,
+    "listingTitle": "1-Bedroom Flat in Canary Wharf",
+    "address": "London, E14 5TJ",
+    "listingStatus": "In Progress",
+    "landlordName": "John SmithJohn SmithJohn SmithJohn SmithJohn SmithJohn SmithJohn SmithJohn Smith",
+    "landlordEmail": "john.smith@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 2,
+    "listingTitle": "Modern Studio near Central Park",
+    "address": "New York, 10001",
+    "listingStatus": "Verified",
+    "landlordName": "Maria Gomez",
+    "landlordEmail": "maria.gomez@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 3,
+    "listingTitle": "Furnished Loft in Mitte",
+    "address": "Berlin, 10115",
+    "listingStatus": "Unverified",
+    "landlordName": "Liam Brown",
+    "landlordEmail": "liam.brown@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 4,
+    "listingTitle": "2-Bedroom Apartment in Downtown Toronto",
+    "address": "Toronto, M5H 2N2",
+    "listingStatus": "Verified",
+    "landlordName": "Emma Davis",
+    "landlordEmail": "emma.davis@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 5,
+    "listingTitle": "Charming Flat in Le Marais",
+    "address": "Paris, 75001",
+    "listingStatus": "In Progress",
+    "landlordName": "Noah Wilson",
+    "landlordEmail": "noah.wilson@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 6,
+    "listingTitle": "Luxury Apartment in Downtown Dubai",
+    "address": "Dubai, 00000",
+    "listingStatus": "Unverified",
+    "landlordName": "Olivia Chen",
+    "landlordEmail": "olivia.chen@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 7,
+    "listingTitle": "Beachside Studio in Bondi",
+    "address": "Sydney, 2000",
+    "listingStatus": "In Progress",
+    "landlordName": "William Lee",
+    "landlordEmail": "william.lee@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 8,
+    "listingTitle": "Cozy Apartment in Mission District",
+    "address": "San Francisco, 94103",
+    "listingStatus": "Verified",
+    "landlordName": "Sophia Martin",
+    "landlordEmail": "sophia.martin@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 9,
+    "listingTitle": "Canal View Studio in Amsterdam Centrum",
+    "address": "Amsterdam, 1012 WX",
+    "listingStatus": "Unverified",
+    "landlordName": "James Thompson",
+    "landlordEmail": "james.thompson@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 10,
+    "listingTitle": "Penthouse with Terrace in Rome",
+    "address": "Rome, 00184",
+    "listingStatus": "In Progress",
+    "landlordName": "Ava Clark",
+    "landlordEmail": "ava.clark@example.com",
+    "reviewer": "Assign reviewer"
+  },
+
+  
+  {
+    "id": 11,
+    "listingTitle": "Spacious Flat in Barcelona City Center",
+    "address": "Barcelona, 08001",
+    "listingStatus": "Verified",
+    "landlordName": "Daniel Rivera",
+    "landlordEmail": "daniel.rivera@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 12,
+    "listingTitle": "Modern Apartment in Dubai Marina",
+    "address": "Dubai, 00000",
+    "listingStatus": "Unverified",
+    "landlordName": "Isabella Khan",
+    "landlordEmail": "isabella.khan@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 13,
+    "listingTitle": "1-Bedroom Unit near Shibuya Station",
+    "address": "Tokyo, 150-0002",
+    "listingStatus": "In Progress",
+    "landlordName": "Kenji Nakamura",
+    "landlordEmail": "kenji.nakamura@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 14,
+    "listingTitle": "Elegant Condo in Downtown Chicago",
+    "address": "Chicago, IL 60611",
+    "listingStatus": "Verified",
+    "landlordName": "Grace Johnson",
+    "landlordEmail": "grace.johnson@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 15,
+    "listingTitle": "Affordable Studio in Athens",
+    "address": "Athens, 10552",
+    "listingStatus": "Unverified",
+    "landlordName": "Nikos Papadopoulos",
+    "landlordEmail": "nikos.papa@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 16,
+    "listingTitle": "Stylish Loft in Soho",
+    "address": "London, W1D 3QF",
+    "listingStatus": "In Progress",
+    "landlordName": "Zara Ahmed",
+    "landlordEmail": "zara.ahmed@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 17,
+    "listingTitle": "2-Bedroom Flat near Eiffel Tower",
+    "address": "Paris, 75007",
+    "listingStatus": "Verified",
+    "landlordName": "Hugo Laurent",
+    "landlordEmail": "hugo.laurent@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 18,
+    "listingTitle": "Harbour-View Apartment in Sydney",
+    "address": "Sydney, 2060",
+    "listingStatus": "In Progress",
+    "landlordName": "Chloe White",
+    "landlordEmail": "chloe.white@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 19,
+    "listingTitle": "Bright Apartment in Lisbon Old Town",
+    "address": "Lisbon, 1100-315",
+    "listingStatus": "Unverified",
+    "landlordName": "Miguel Fernandes",
+    "landlordEmail": "miguel.fernandes@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 20,
+    "listingTitle": "Flatshare Room in Berlin Kreuzberg",
+    "address": "Berlin, 10997",
+    "listingStatus": "Verified",
+    "landlordName": "Laura Becker",
+    "landlordEmail": "laura.becker@example.com",
+    "reviewer": "Hessa"
+  },
+  
+  {
+    "id": 21,
+    "listingTitle": "Modern Apartment near CN Tower",
+    "address": "Toronto, M5V 2T6",
+    "listingStatus": "In Progress",
+    "landlordName": "Jason Carter",
+    "landlordEmail": "jason.carter@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 22,
+    "listingTitle": "Historic Flat in Edinburgh Old Town",
+    "address": "Edinburgh, EH1 1QS",
+    "listingStatus": "Verified",
+    "landlordName": "Fiona McKenzie",
+    "landlordEmail": "fiona.mckenzie@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 23,
+    "listingTitle": "1-Bedroom Unit in Downtown LA",
+    "address": "Los Angeles, CA 90014",
+    "listingStatus": "Unverified",
+    "landlordName": "Carlos Alvarez",
+    "landlordEmail": "carlos.alvarez@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 24,
+    "listingTitle": "Rooftop Studio in Cape Town CBD",
+    "address": "Cape Town, 8000",
+    "listingStatus": "Verified",
+    "landlordName": "Ayesha Patel",
+    "landlordEmail": "ayesha.patel@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 25,
+    "listingTitle": "Furnished Apartment in Downtown Oslo",
+    "address": "Oslo, 0157",
+    "listingStatus": "In Progress",
+    "landlordName": "Jonas Eriksen",
+    "landlordEmail": "jonas.eriksen@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 26,
+    "listingTitle": "Cosy Flat near St. Stephen's Basilica",
+    "address": "Budapest, 1051",
+    "listingStatus": "Unverified",
+    "landlordName": "Anna Kovacs",
+    "landlordEmail": "anna.kovacs@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 27,
+    "listingTitle": "Loft Apartment in Downtown Warsaw",
+    "address": "Warsaw, 00-001",
+    "listingStatus": "Verified",
+    "landlordName": "Mateusz Nowak",
+    "landlordEmail": "mateusz.nowak@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 28,
+    "listingTitle": "Studio Apartment near La Rambla",
+    "address": "Barcelona, 08002",
+    "listingStatus": "In Progress",
+    "landlordName": "Lucia Hernandez",
+    "landlordEmail": "lucia.hernandez@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 29,
+    "listingTitle": "Luxury Penthouse in Marina Bay",
+    "address": "Singapore, 018956",
+    "listingStatus": "Verified",
+    "landlordName": "Nathan Ong",
+    "landlordEmail": "nathan.ong@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 30,
+    "listingTitle": "Shared Flat in Dublin City Centre",
+    "address": "Dublin, D01 YX62",
+    "listingStatus": "Unverified",
+    "landlordName": "Ciara Murphy",
+    "landlordEmail": "ciara.murphy@example.com",
+    "reviewer": "Taher"
+  },
+
+
+  {
+    "id": 31,
+    "listingTitle": "Stylish Apartment in Brooklyn",
+    "address": "New York, NY 11201",
+    "listingStatus": "In Progress",
+    "landlordName": "Brandon Lewis",
+    "landlordEmail": "brandon.lewis@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 32,
+    "listingTitle": "2-Bedroom Flat in Dublin Docklands",
+    "address": "Dublin, D02 YN60",
+    "listingStatus": "Verified",
+    "landlordName": "Maeve Brennan",
+    "landlordEmail": "maeve.brennan@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 33,
+    "listingTitle": "City-View Studio in Downtown Seattle",
+    "address": "Seattle, WA 98101",
+    "listingStatus": "Unverified",
+    "landlordName": "Oliver Martinez",
+    "landlordEmail": "oliver.martinez@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 34,
+    "listingTitle": "Charming Flat in Prague Old Town",
+    "address": "Prague, 110 00",
+    "listingStatus": "In Progress",
+    "landlordName": "Eliska Novak",
+    "landlordEmail": "eliska.novak@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 35,
+    "listingTitle": "Furnished Unit near Union Station",
+    "address": "Washington DC, 20002",
+    "listingStatus": "Verified",
+    "landlordName": "Kevin White",
+    "landlordEmail": "kevin.white@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 36,
+    "listingTitle": "Sunny Apartment in Tel Aviv",
+    "address": "Tel Aviv, 6100001",
+    "listingStatus": "Unverified",
+    "landlordName": "Noa Levi",
+    "landlordEmail": "noa.levi@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 37,
+    "listingTitle": "Seaside Flat in Brighton",
+    "address": "Brighton, BN1 1AA",
+    "listingStatus": "In Progress",
+    "landlordName": "George Adams",
+    "landlordEmail": "george.adams@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 38,
+    "listingTitle": "High-Rise Studio in Kuala Lumpur",
+    "address": "Kuala Lumpur, 50088",
+    "listingStatus": "Verified",
+    "landlordName": "Nur Aisyah",
+    "landlordEmail": "nur.aisyah@example.com",
+    "reviewer": "Taher"
+  },
+  {
+    "id": 39,
+    "listingTitle": "Classic Apartment in Florence",
+    "address": "Florence, 50123",
+    "listingStatus": "Unverified",
+    "landlordName": "Leonardo Rinaldi",
+    "landlordEmail": "leonardo.rinaldi@example.com",
+    "reviewer": "Hessa"
+  },
+  {
+    "id": 40,
+    "listingTitle": "Shared Loft in San Diego",
+    "address": "San Diego, CA 92101",
+    "listingStatus": "In Progress",
+    "landlordName": "Emily Nguyen",
+    "landlordEmail": "emily.nguyen@example.com",
+    "reviewer": "Assign reviewer"
+  },
+  
+  {
+    "id": 41,
+    "listingTitle": "Penthouse Overlooking Acropolis",
+    "address": "Athens, 11742",
+    "listingStatus": "Verified",
+    "landlordName": "Nikos Georgiou",
+    "landlordEmail": "nikos.georgiou@example.com",
+    "reviewer": "Taher"
+  },
+
+  {
+      "id": 42,
+      "listingTitle": "Garden Flat in South Kensington",
+      "address": "London, SW7 2AZ",
+      "listingStatus": "In Progress",
+      "landlordName": "Amelia Roberts",
+      "landlordEmail": "amelia.roberts@example.com",
+      "reviewer": "Assign reviewer"
+  },
+  {
+      "id": 43,
+      "listingTitle": "Lakeview Condo in Zurich",
+      "address": "Zurich, 8001",
+      "listingStatus": "Verified",
+      "landlordName": "Jonas Müller",
+      "landlordEmail": "jonas.mueller@example.com",
+      "reviewer": "Hessa"
+  },
+  {
+      "id": 44,
+      "listingTitle": "Flat with Rooftop Access in Lisbon",
+      "address": "Lisbon, 1200-370",
+      "listingStatus": "Unverified",
+      "landlordName": "Beatriz Lopes",
+      "landlordEmail": "beatriz.lopes@example.com",
+      "reviewer": "Assign reviewer"
+  },
+  {
+      "id": 45,
+      "listingTitle": "Studio Apartment in Copenhagen",
+      "address": "Copenhagen, 1050",
+      "listingStatus": "In Progress",
+      "landlordName": "Lars Andersen",
+      "landlordEmail": "lars.andersen@example.com",
+      "reviewer": "Hessa"
+  },
+  {
+      "id": 46,
+      "listingTitle": "Flat in Downtown Brussels",
+      "address": "Brussels, 1000",
+      "listingStatus": "Verified",
+      "landlordName": "Chloe Dubois",
+      "landlordEmail": "chloe.dubois@example.com",
+      "reviewer": "Taher"
+  },
+  {
+      "id": 47,
+      "listingTitle": "Loft Apartment near Stockholm Central",
+      "address": "Stockholm, 111 20",
+      "listingStatus": "Unverified",
+      "landlordName": "Erik Johansson",
+      "landlordEmail": "erik.johansson@example.com",
+      "reviewer": "Assign reviewer"
+  },
+  {
+      "id": 48,
+      "listingTitle": "Studio near Central Station Milan",
+      "address": "Milan, 20124",
+      "listingStatus": "In Progress",
+      "landlordName": "Giulia Romano",
+      "landlordEmail": "giulia.romano@example.com",
+      "reviewer": "Hessa"
+  },
+  {
+      "id": 49,
+      "listingTitle": "Shared Apartment in Vienna",
+      "address": "Vienna, 1010",
+      "listingStatus": "Verified",
+      "landlordName": "Felix Wagner",
+      "landlordEmail": "felix.wagner@example.com",
+      "reviewer": "Taher"
+  },
+  {
+      "id": 50,
+      "listingTitle": "Luxury Studio in Munich Old Town",
+      "address": "Munich, 80331",
+      "listingStatus": "Unverified",
+      "landlordName": "Anna Schmitt",
+      "landlordEmail": "anna.schmitt@example.com",
+      "reviewer": "Assign reviewer"
+  }
+]
+  
