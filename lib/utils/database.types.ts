@@ -14,18 +14,21 @@ export type Database = {
           complaint_id: string
           created_at: string
           description: string | null
+          status: string | null
           title: string | null
         }
         Insert: {
           complaint_id?: string
           created_at?: string
           description?: string | null
+          status?: string | null
           title?: string | null
         }
         Update: {
           complaint_id?: string
           created_at?: string
           description?: string | null
+          status?: string | null
           title?: string | null
         }
         Relationships: []
@@ -39,9 +42,10 @@ export type Database = {
           city: string
           created_at: string
           description: string
-          is_verified: boolean
+          is_verified: string
           listing_id: string
           price: number
+          reviewer: string | null
           title: string
           user_id: string
         }
@@ -53,9 +57,10 @@ export type Database = {
           city: string
           created_at?: string
           description: string
-          is_verified?: boolean
+          is_verified?: string
           listing_id?: string
           price: number
+          reviewer?: string | null
           title: string
           user_id?: string
         }
@@ -67,9 +72,10 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string
-          is_verified?: boolean
+          is_verified?: string
           listing_id?: string
           price?: number
+          reviewer?: string | null
           title?: string
           user_id?: string
         }
@@ -122,7 +128,12 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      unique_reviewers: {
+        Row: {
+          reviewer: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
