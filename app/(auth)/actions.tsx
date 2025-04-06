@@ -220,7 +220,14 @@ export const getAllListings = async () => {
   }
 
   if (authData?.user) {
-    const { data, error } = await supabase.from("listings").select("*");
+    const { data, error } = await supabase.from("listings").select(
+      `
+       *,
+       users!listings_user_id_fkey(
+        first_name
+       )
+      `
+    );
 
     return { listingData: data ?? [], listingError: error ?? null };
   }

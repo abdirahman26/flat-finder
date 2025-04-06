@@ -127,60 +127,11 @@ const LandlordProfile = () => {
 
   // mock data for user and listings
   const user = {
-    name: "Sophie",
-    joinDate: "Joined January 2019",
-    location: "Seattle, Washington",
     verified: true,
-    avatar: "SW",
-    bio: "Hi there! I love to travel and explore new places. When I'm not traveling, I enjoy hiking and photography. I'm a clean, quiet guest and responsive host.",
-    languages: ["English", "French", "Spanish"],
-    responseRate: "98%",
-    responseTime: "within an hour",
-    hostingStats: {
-      totalListings: 3,
-      totalReviews: 152,
-      averageRating: 4.92,
-    },
     tripStats: {
       totalTrips: 27,
-      countries: 12,
-      upcomingTrips: 2,
     },
   };
-
-  // Mock listings data
-  // const listings = [
-  //   {
-  //     id: 1,
-  //     title: "Mountain View Cabin",
-  //     location: "Aspen, Colorado",
-  //     price: "$195/night",
-  //     rating: 4.97,
-  //     reviews: 68,
-  //     image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-  //     superhost: false,
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "Urban Loft with Skyline View",
-  //     location: "Seattle, Washington",
-  //     price: "$135/night",
-  //     rating: 4.89,
-  //     reviews: 43,
-  //     image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-  //     superhost: false,
-  //   },
-  //   {
-  //     id: 3,
-  //     title: "Cozy Studio in Historic District",
-  //     location: "Portland, Oregon",
-  //     price: "$105/night",
-  //     rating: 4.85,
-  //     reviews: 41,
-  //     image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
-  //     superhost: false,
-  //   },
-  // ];
 
   return (
     <div
@@ -188,29 +139,6 @@ const LandlordProfile = () => {
         mounted ? "animate-fade-in" : "opacity-0"
       }`}
     >
-      {/* Navigation */}
-      {/* <nav className="fixed top-0 left-0 right-0 z-10 glass-card bg-dark/90 backdrop-blur-lg px-4 py-3 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center">
-          <div className="text-custom-lime font-semibold text-xl">
-            Wanderlust
-          </div>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="icon" className="relative">
-            <Heart className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <MessageCircle className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center bg-dark/60 rounded-full px-3 py-1 border border-white/10">
-            <Avatar className="h-8 w-8 bg-custom-lime text-dark mr-2">
-              <span>{user.avatar}</span>
-            </Avatar>
-            <span className="hidden md:inline-block text-sm">Profile</span>
-          </div>
-        </div>
-      </nav> */}
-
       <div className="pt-16 px-4 md:px-6 max-w-5xl mx-auto">
         <div className="flex flex-col md:flex-row gap-6 mt-6">
           {/* Left Column - Profile info */}
@@ -249,31 +177,6 @@ const LandlordProfile = () => {
                     {userData.id_number.toString()}
                   </p>
                 </div>
-
-                {/* <div className="flex items-start">
-                  <MessageCircle className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
-                  <div>
-                    <p className="text-sm text-white font-medium">Languages</p>
-                    <p className="text-sm text-gray-300">
-                      {user.languages.join(", ")}
-                    </p>
-                  </div>
-                </div> */}
-
-                {/* <div className="flex items-start">
-                  <Building className="h-5 w-5 text-custom-lime shrink-0 mt-0.5 mr-2" />
-                  <div>
-                    <p className="text-sm text-white font-medium">
-                      Response Rate & Time
-                    </p>
-                    <p className="text-sm text-gray-300">
-                      {user.responseRate} response rate
-                    </p>
-                    <p className="text-sm text-gray-300">
-                      Typically responds {user.responseTime}
-                    </p>
-                  </div>
-                </div> */}
               </div>
 
               <div className="mt-6">
@@ -282,39 +185,6 @@ const LandlordProfile = () => {
                 </Button>
               </div>
             </div>
-
-            {/* <div
-              className="glass-card p-6 mt-6 animate-slide-up"
-              style={{ animationDelay: "0.2s" }}
-            >
-              <h2 className="text-lg font-semibold mb-4 text-custom-lime flex items-center">
-                <Star className="mr-2 h-5 w-5" /> Host Stats
-              </h2>
-
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Listings</span>
-                  <span className="font-medium text-gray-300">
-                    {user.hostingStats.totalListings}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Reviews</span>
-                  <span className="font-medium text-gray-300">
-                    {user.hostingStats.totalReviews}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Average Rating</span>
-                  <span className="font-medium flex items-center">
-                    <Star className="h-4 w-4 text-custom-lime mr-1 fill-custom-lime" />
-                    <span className="text-gray-300">
-                      {user.hostingStats.averageRating}
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div> */}
 
             <div
               className="glass-card p-6 mt-6 animate-slide-up"
@@ -331,18 +201,6 @@ const LandlordProfile = () => {
                     {user.tripStats.totalTrips}
                   </span>
                 </div>
-                {/* <div className="flex justify-between">
-                  <span className="text-gray-300">Countries Visited</span>
-                  <span className="font-medium">
-                    {user.tripStats.countries}
-                  </span>
-                </div> */}
-                {/* <div className="flex justify-between">
-                  <span className="text-gray-300">Upcoming Trips</span>
-                  <span className="font-medium">
-                    {user.tripStats.upcomingTrips}
-                  </span>
-                </div> */}
               </div>
             </div>
           </div>
@@ -419,28 +277,6 @@ const LandlordProfile = () => {
                 ))}
               </div>
             </div>
-
-            {/* <div
-              className="mt-6 glass-card p-6 animate-slide-up"
-              style={{ animationDelay: "0.5s" }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-custom-lime flex items-center">
-                  <Calendar className="mr-2 h-5 w-5" /> Upcoming Trips
-                </h2>
-                <Button variant="outline" size="sm" className="border-white/20">
-                  View All
-                </Button>
-              </div>
-
-              <div className="p-6 text-center border border-dashed border-white/20 rounded-lg">
-                <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-400" />
-                <p className="text-gray-300">No upcoming trips to display.</p>
-                <Button className="mt-4 bg-custom-lime text-dark hover:bg-custom-lime/90">
-                  Book a Place
-                </Button>
-              </div>
-            </div> */}
           </div>
         </div>
       </div>

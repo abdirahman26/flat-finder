@@ -44,6 +44,7 @@ interface Property {
 
 interface PropertyListing {
   listing_id: string;
+  user_id: string;
   title: string;
   description: string;
   price: number;
@@ -52,6 +53,9 @@ interface PropertyListing {
   bedrooms: number;
   bathrooms: number;
   area_code: string;
+  users: {
+    first_name: string;
+  };
 }
 
 interface UserData {
@@ -554,32 +558,30 @@ const ConsultantDash = () => {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProperties.map((property) => (
+              {propertiess.map((listing) => (
                 <Card
-                  key={property.id}
+                  key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="relative">
                     <img
-                      src={property.image}
-                      alt={property.title}
+                      // src={property.image}
+                      alt={listing.title}
                       className="w-full h-48 object-cover"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleWatchlist(property.id)}
+                      onClick={() => toggleWatchlist(listing.area_code)}
                       className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                     >
                       <Heart
                         className={`h-5 w-5 ${
-                          property.watchlisted
-                            ? "fill-accent text-accent"
-                            : "text-white"
+                          true ? "fill-accent text-accent" : "text-white"
                         }`}
                       />
                     </Button>
-                    {property.superhost && (
+                    {false && (
                       <div className="absolute top-2 left-2">
                         <Badge className="bg-accent text-dark">Superhost</Badge>
                       </div>
@@ -588,39 +590,39 @@ const ConsultantDash = () => {
 
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg">
-                        {property.title}
-                      </h3>
+                      <h3 className="font-semibold text-lg">{listing.title}</h3>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                        <span>{property.rating}</span>
+                        <span>Property rating here</span>
                       </div>
                     </div>
 
                     <p className="text-gray-400 text-sm flex items-center mb-2">
-                      <MapPin className="h-3 w-3 mr-1" /> {property.location}
+                      <MapPin className="h-3 w-3 mr-1" /> {listing.area_code}
+                      {""}
+                      {listing.area}
                     </p>
 
                     <p className="text-sm text-gray-400 mb-3 line-clamp-2">
-                      {property.description}
+                      {listing.description}
                     </p>
 
                     <div className="flex items-center justify-between">
                       <p className="text-accent font-medium">
-                        ${property.price}/month
+                        ${listing.price}/month
                       </p>
                       <div className="flex items-center text-sm">
                         <User className="h-3 w-3 mr-1 text-gray-400" />
                         <span className="text-gray-400">
-                          Hosted by {property.host}
+                          Hosted by: {listing.users.first_name}
                         </span>
                       </div>
                     </div>
 
                     <div className="mt-4 flex items-center text-sm space-x-2 text-gray-400">
-                      <span>{property.bedrooms} bed</span>
+                      <span>{listing.bedrooms} bed</span>
                       <span>•</span>
-                      <span>{property.bathrooms} bath</span>
+                      <span>{listing.bathrooms} bath</span>
                     </div>
 
                     <div className="mt-4 flex space-x-2">
@@ -629,7 +631,7 @@ const ConsultantDash = () => {
                         size="sm"
                         className="border-white/20 text-sm flex-1"
                       >
-                        View Details
+                        Contact Host
                       </Button>
                       <Button
                         size="sm"
