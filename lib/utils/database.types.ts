@@ -42,7 +42,7 @@ export type Database = {
           city: string
           created_at: string
           description: string
-          is_verified: boolean
+          is_verified: string
           listing_id: string
           price: number
           reviewer: string | null
@@ -57,7 +57,7 @@ export type Database = {
           city: string
           created_at?: string
           description: string
-          is_verified?: boolean
+          is_verified?: string
           listing_id?: string
           price: number
           reviewer?: string | null
@@ -72,7 +72,7 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string
-          is_verified?: boolean
+          is_verified?: string
           listing_id?: string
           price?: number
           reviewer?: string | null
@@ -128,7 +128,12 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      unique_reviewers: {
+        Row: {
+          reviewer: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

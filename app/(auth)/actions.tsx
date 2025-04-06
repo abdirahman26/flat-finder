@@ -148,7 +148,7 @@ export const getPendingListingsCount = async (): Promise<number> => {
   const { count, error } = await supabase
     .from("listings")
     .select("*", { count: "exact", head: true })
-    .eq("is_verified", false);
+    .eq("is_verified", "Unverified"); // Changed from `false` to `"Unverified"`
 
   if (error) {
     console.error("Error fetching pending listings count:", error);
@@ -157,6 +157,7 @@ export const getPendingListingsCount = async (): Promise<number> => {
 
   return count ?? 0;
 };
+
 
 export const getUserSignupsStats = async (): Promise<{
   past7DaysCount: number;
@@ -203,7 +204,7 @@ export const getVerifiedListingsCount = async (): Promise<number> => {
   const { count, error } = await supabase
     .from("listings")
     .select("*", { count: "exact", head: true })
-    .eq("is_verified", true);
+    .in("is_verified", ["Verified", "FDM Verified"]); // ✅ match either value
 
   if (error) {
     console.error("Error fetching verified listings count:", error);
@@ -236,23 +237,85 @@ export const getAllListingsOrderedByStatus = async () => {
 
   const { data, error } = await supabase
     .from("listings")
-    .select(`
-      id,
-      title,
-      city,
-      area_code,
-      is_verified,
-      reviewer,
-      users (
-        email,
-        first_name
-      )
-    `)
-    .order("is_verified", { ascending: true }); // false first, then true
-
+    .select(
+   `
+        listing_id,
+        title,
+        city,
+        area_code,
+        is_verified,
+        reviewer,
+        users!listings_user_id_fkey (
+          email,
+          first_name
+        )
+      `
+    )
   if (error) {
     console.error("Error fetching listings:", error);
     return [];
   }
+
   return data ?? [];
+};
+
+
+export const getUniqueReviewers = async () => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("unique_reviewers")
+    .select("reviewer");
+
+  if (error) {
+    console.error("Error fetching reviewers:", error);
+    return [];
+  }
+
+  return data.map((row) => row.reviewer);
+};
+
+
+
+export const updateListingStatus = async (listing_id: string, status: string) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("listings")
+    .update({ is_verified: status })
+    .eq("listing_id", listing_id);
+
+  if (error) {
+    console.error(`Error updating status to ${status}:`, error);
+    throw error;
+  }
+};
+
+
+export const deleteListing = async (listing_id: string) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("listings")
+    .delete()
+    .eq("listing_id", listing_id);
+
+  if (error) {
+    console.error("Error deleting listing:", error);
+    throw error;
+  }
+};
+
+export const assignReviewer = async (listing_id: string, reviewer: string) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("listings")
+    .update({ reviewer }) // shorthand for { reviewer: reviewer }
+    .eq("listing_id", listing_id);
+
+  if (error) {
+    console.error("Error assigning reviewer:", error);
+    throw error;
+  }
 };

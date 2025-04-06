@@ -23,6 +23,7 @@ export function useListingsSubscription() {
         () => {
           queryClient.invalidateQueries({ queryKey: ["pending-listings"] });
           queryClient.invalidateQueries({ queryKey: ["verified-listings"] });
+          queryClient.invalidateQueries({ queryKey: ["listings"] });
         }
       )
 

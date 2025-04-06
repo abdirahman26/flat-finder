@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { signOutFunc, getPendingListingsCount, getUserSignupsStats, getVerifiedListingsCount, getUnresolvedComplaintsCount } from "@/app/(auth)/actions";
+import { signOutFunc, getPendingListingsCount, getUserSignupsStats, getVerifiedListingsCount, getUnresolvedComplaintsCount, getAllListingsOrderedByStatus, getUniqueReviewers } from "@/app/(auth)/actions";
 import DataTable from "@/components/DataTable";
 import StatCard from "@/components/StatCard";
 import { useListingsSubscription } from "@/hooks/useListingsSubscription";
@@ -18,8 +19,7 @@ import data from "./data.json";
 
 function AdminDashboardPage() {
   const router = useRouter();
-  useListingsSubscription(); // 👈 Add this line here
-
+  useListingsSubscription(); 
 
   const handleSignOut = async () => {
     console.log("Signing out...");
@@ -56,6 +56,28 @@ function AdminDashboardPage() {
     queryFn: getUnresolvedComplaintsCount,
   });
 
+  const { data: listingsData = [], isLoading: loadingListings } = useQuery({
+    queryKey: ["listings"],
+    queryFn: getAllListingsOrderedByStatus,
+  });
+
+  const { data: uniqueReviewers = [], isLoading: loadingUniqueReviewers } = useQuery({
+    queryKey: ["unique-reviewers"],
+    queryFn: getUniqueReviewers,
+  });
+
+  useEffect(() => {
+    if (!loadingListings) {
+      console.log("Listings Data:", listingsData);
+    }
+  }, [listingsData, loadingListings]);
+
+  // useEffect(() => {
+  //   if (!loadingUniqueReviewers) {
+  //     console.log("Unique Reviewers:", uniqueReviewers);
+  //   }
+  // }, [uniqueReviewers, loadingUniqueReviewers]);
+  
   return (
     <>
       <div className="max-w-7xl mx-auto grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -86,7 +108,12 @@ function AdminDashboardPage() {
       </div>
 
       <div>
-        <DataTable data={data} />
+        {loadingListings ? (
+          <div>Loading listings...</div>
+        ) : (
+          <DataTable data={listingsData} uniqueReviewers={uniqueReviewers} />
+
+        )}
       </div>
     </>
   );
