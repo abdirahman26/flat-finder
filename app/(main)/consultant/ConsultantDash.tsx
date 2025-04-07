@@ -23,26 +23,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
-import { getAllListings, getUserDetails } from "@/app/(auth)/actions";
+import {
+  getAllListings,
+  getUserDetails,
+  addFavourite,
+  removeFavourite,
+  getAllFavouritesByUserID,
+} from "@/app/(auth)/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-// Define property type
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  host: string;
-  superhost: boolean;
-  watchlisted: boolean;
-}
 
 interface PropertyListing {
   listing_id: string;
@@ -58,6 +47,7 @@ interface PropertyListing {
   users: {
     first_name: string;
   };
+  favourited: boolean;
 }
 
 interface UserData {
@@ -82,174 +72,11 @@ const ConsultantDash = () => {
     email: "",
     id_number: 0o000,
   });
-  const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
+  const [listings, setListings] = useState<PropertyListing[]>([]);
 
   const router = useRouter();
 
-  // Mock user data
-  const user = {
-    name: "Alex",
-    role: "Real Estate Consultant",
-    avatar: "AS",
-  };
-
-  // Mock properties data
-  const [properties, setProperties] = useState<Property[]>([
-    {
-      id: "1",
-      title: "Modern Downtown Apartment",
-      description:
-        "Stylish apartment in the heart of downtown with amazing city views and amenities.",
-      location: "Seattle, Washington",
-      price: 1800,
-      bedrooms: 2,
-      bathrooms: 2,
-      rating: 4.92,
-      reviews: 68,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      host: "Sophie",
-      superhost: true,
-      watchlisted: false,
-    },
-    {
-      id: "2",
-      title: "Cozy Suburban Home",
-      description:
-        "Family-friendly home with a spacious backyard in a quiet neighborhood.",
-      location: "Portland, Oregon",
-      price: 2200,
-      bedrooms: 3,
-      bathrooms: 2,
-      rating: 4.85,
-      reviews: 43,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-      host: "Michael",
-      superhost: false,
-      watchlisted: false,
-    },
-    {
-      id: "3",
-      title: "Luxury Waterfront Condo",
-      description:
-        "High-end condo with spectacular water views and resort-style amenities.",
-      location: "San Diego, California",
-      price: 3200,
-      bedrooms: 2,
-      bathrooms: 2,
-      rating: 4.98,
-      reviews: 124,
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
-      host: "Emily",
-      superhost: true,
-      watchlisted: true,
-    },
-    {
-      id: "4",
-      title: "Urban Studio Loft",
-      description:
-        "Contemporary open-concept studio in the arts district with industrial finishes.",
-      location: "Austin, Texas",
-      price: 1600,
-      bedrooms: 1,
-      bathrooms: 1,
-      rating: 4.87,
-      reviews: 96,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
-      host: "David",
-      superhost: false,
-      watchlisted: false,
-    },
-    {
-      id: "5",
-      title: "Mountain View Cabin",
-      description:
-        "Rustic cabin with stunning mountain views, perfect for a weekend getaway.",
-      location: "Aspen, Colorado",
-      price: 2800,
-      bedrooms: 3,
-      bathrooms: 2,
-      rating: 4.96,
-      reviews: 72,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      host: "Sophie",
-      superhost: true,
-      watchlisted: false,
-    },
-    {
-      id: "6",
-      title: "Beachfront Paradise",
-      description:
-        "Step directly onto the sand from this beautiful beachfront property.",
-      location: "Miami, Florida",
-      price: 4200,
-      bedrooms: 4,
-      bathrooms: 3,
-      rating: 4.99,
-      reviews: 153,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-      host: "James",
-      superhost: true,
-      watchlisted: false,
-    },
-  ]);
-
-  // Filter options
-  const filterOptions = [
-    "All",
-    "Apartments",
-    "Houses",
-    "Cabins",
-    "Beachfront",
-    "Downtown",
-  ];
-
-  // Handle watchlist toggle
-  const toggleWatchlist = (id: string) => {
-    setProperties(
-      properties.map((property) =>
-        property.id === id
-          ? { ...property, watchlisted: !property.watchlisted }
-          : property
-      )
-    );
-
-    const property = properties.find((p) => p.id === id);
-    if (property) {
-      if (!property.watchlisted) {
-        toast.success(`${property.title} added to your watchlist!`);
-      } else {
-        toast.success(`${property.title} removed from your watchlist!`);
-      }
-    }
-  };
-
-  // Filter properties based on search and filters
-  const filteredProperties = properties.filter((property) => {
-    const matchesSearch =
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.location.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesPrice =
-      property.price >= priceFilter[0] && property.price <= priceFilter[1];
-
-    const matchesBedrooms =
-      bedroomsFilter === 0 || property.bedrooms >= bedroomsFilter;
-
-    const matchesFilter =
-      selectedFilter === "All" ||
-      (selectedFilter === "Apartments" &&
-        property.title.includes("Apartment")) ||
-      (selectedFilter === "Houses" && property.title.includes("Home")) ||
-      (selectedFilter === "Cabins" && property.title.includes("Cabin")) ||
-      (selectedFilter === "Beachfront" &&
-        property.title.includes("Beachfront")) ||
-      (selectedFilter === "Downtown" && property.title.includes("Downtown"));
-
-    return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
-  });
-
-  const fetchListings = async () => {
+  const fetchAllListings = async (): Promise<PropertyListing[]> => {
     try {
       const supabase = createClient();
       const { data: authData, error: authError } =
@@ -258,24 +85,117 @@ const ConsultantDash = () => {
       if (authError || !authData?.user) {
         console.error("Error fetching user:", authError);
         toast.error("Failed to retrieve user data.");
-        return;
+        return [];
       }
+
+      const user_id = authData.user.id;
 
       const { listingData, listingError } = await getAllListings();
 
       if (listingError) {
         console.error("Error fetching listings:", listingError);
-        toast.error("Failed to load listings.");
-      } else if (listingData) {
-        setPropertiess(
-          Array.isArray(listingData) ? listingData : [listingData]
-        );
+        toast.error("Failed to retrieve listings.");
+        return [];
       }
-    } catch (err) {
-      console.error("Unexpected error fetching listings:", err);
-      toast.error("An unexpected error occurred.");
+
+      if (!listingData || !Array.isArray(listingData)) {
+        throw new Error("Listing data is missing or not an array");
+      }
+
+      const { data: favouritedListings, error: favouritesError } =
+        await getAllFavouritesByUserID(user_id);
+
+      if (favouritesError) {
+        console.error("Error fetching favourites:", favouritesError);
+        toast.error("Failed to retrieve favourites.");
+        return [];
+      }
+
+      const favouritedListingIDs = new Set(
+        favouritedListings.map((fav) => fav.listing_id),
+      );
+
+      return listingData.map((listing) => ({
+        ...listing,
+        favourited: favouritedListingIDs.has(listing.listing_id),
+      }));
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+      return [];
     }
   };
+
+  useEffect(() => {
+    const loadListings = async () => {
+      const data = await fetchAllListings();
+      setListings(data);
+    };
+
+    loadListings();
+  }, []);
+
+  const toggleFavourite = async (id: string) => {
+    setListings((prevListings) =>
+      prevListings.map((listing) =>
+        listing.listing_id === id
+          ? { ...listing, favourited: !listing.favourited }
+          : listing,
+      ),
+    );
+
+    const updatedListing = listings.find((l) => l.listing_id === id);
+
+    const supabase = createClient();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !authData?.user) {
+      console.error("Error fetching user:", authError);
+      toast.error("Failed to retrieve user data.");
+      return;
+    }
+
+    if (updatedListing) {
+      const user_id = authData.user.id;
+
+      if (updatedListing.favourited) {
+        console.log("removed favourite");
+        await removeFavourite(user_id, updatedListing.listing_id);
+        toast.success(`${updatedListing.title} removed from your watchlist!`);
+      } else {
+        console.log("added favourite");
+        await addFavourite(user_id, updatedListing.listing_id);
+        toast.success(`${updatedListing.title} added to your watchlist!`);
+      }
+    }
+  };
+
+  // Filter listings based on search and filters
+  const filteredListings = listings.filter((listing) => {
+    const matchesSearch =
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${listing.city}, ${listing.area}`
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+    const matchesPrice =
+      listing.price >= priceFilter[0] && listing.price <= priceFilter[1];
+
+    const matchesBedrooms =
+      bedroomsFilter === 0 || listing.bedrooms >= bedroomsFilter;
+
+    const matchesFilter =
+      selectedFilter === "All" ||
+      (selectedFilter === "Apartments" &&
+        listing.title.includes("Apartment")) ||
+      (selectedFilter === "Houses" && listing.title.includes("Home")) ||
+      (selectedFilter === "Cabins" && listing.title.includes("Cabin")) ||
+      (selectedFilter === "Beachfront" &&
+        listing.title.includes("Beachfront")) ||
+      (selectedFilter === "Downtown" && listing.title.includes("Downtown"));
+
+    return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
+  });
 
   const formatDate = (isoString: string) => {
     return new Date(isoString).toLocaleString("en-US", {
@@ -322,8 +242,18 @@ const ConsultantDash = () => {
   useEffect(() => {
     setMounted(true);
     fetchUserData();
-    fetchListings();
   }, []);
+
+  // Filter options
+  const filterOptions = [
+    "All",
+    "Apartments",
+    "Houses",
+    "Cabins",
+    "Beachfront",
+    "Downtown",
+  ];
+
   return (
     <div
       className={`min-h-screen bg-dark ${
@@ -336,7 +266,7 @@ const ConsultantDash = () => {
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-accent text-dark text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {properties.filter((p) => p.watchlisted).length}
+              {listings.filter((l) => l.favourited).length}
             </span>
           </Button>
           <Button variant="ghost" size="icon">
@@ -541,10 +471,10 @@ const ConsultantDash = () => {
         >
           <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
             <Building className="mr-2 h-5 w-5" /> Properties (
-            {filteredProperties.length})
+            {filteredListings.length})
           </h2>
 
-          {filteredProperties.length === 0 ? (
+          {filteredListings.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <Search className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">No properties found</h3>
@@ -566,34 +496,31 @@ const ConsultantDash = () => {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {propertiess.map((listing) => (
+              {filteredListings.map((listing) => (
                 <Card
                   key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="relative">
                     <img
-                      // src={property.image}
+                      // src={listing.image}
                       alt={listing.title}
                       className="w-full h-48 object-cover"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleWatchlist(listing.area_code)}
+                      onClick={() => toggleFavourite(listing.listing_id)}
                       className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                     >
                       <Heart
                         className={`h-5 w-5 ${
-                          true ? "fill-accent text-accent" : "text-white"
+                          listing.favourited
+                            ? "fill-accent text-accent"
+                            : "text-white"
                         }`}
                       />
                     </Button>
-                    {false && (
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-accent text-dark">Superhost</Badge>
-                      </div>
-                    )}
                   </div>
 
                   <CardContent className="p-4">
@@ -601,13 +528,12 @@ const ConsultantDash = () => {
                       <h3 className="font-semibold text-lg">{listing.title}</h3>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                        <span>Property rating here</span>
+                        <span>0</span>
                       </div>
                     </div>
 
                     <p className="text-gray-400 text-sm flex items-center mb-2">
-                      <MapPin className="h-3 w-3 mr-1" /> {listing.area_code}
-                      {""}
+                      <MapPin className="h-3 w-3 mr-1" /> {listing.city},{" "}
                       {listing.area}
                     </p>
 
@@ -655,81 +581,71 @@ const ConsultantDash = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredProperties.map((property) => (
+              {filteredListings.map((listing) => (
                 <Card
-                  key={property.id}
+                  key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
-                        src={property.image}
-                        alt={property.title}
+                        // src={listing.image}
+                        alt={listing.title}
                         className="w-full h-full object-cover"
                       />
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => toggleWatchlist(property.id)}
+                        onClick={() => toggleFavourite(listing.listing_id)}
                         className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                       >
                         <Heart
                           className={`h-5 w-5 ${
-                            property.watchlisted
+                            listing.favourited
                               ? "fill-accent text-accent"
                               : "text-white"
                           }`}
                         />
                       </Button>
-                      {property.superhost && (
-                        <div className="absolute top-2 left-2">
-                          <Badge className="bg-accent text-dark">
-                            Superhost
-                          </Badge>
-                        </div>
-                      )}
                     </div>
 
                     <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-lg">
-                            {property.title}
+                            {listing.title}
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>{property.rating}</span>
-                            <span className="text-gray-400 text-sm ml-1">
-                              ({property.reviews})
-                            </span>
+                            <span>0</span>
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-2">
-                          <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.location}
+                          <MapPin className="h-3 w-3 mr-1" /> {listing.city},{" "}
+                          {listing.area}
                         </p>
 
                         <p className="text-sm text-gray-400 mb-3">
-                          {property.description}
+                          {listing.description}
                         </p>
 
                         <div className="flex items-center space-x-4 mb-3">
                           <div className="flex items-center">
                             <User className="h-3 w-3 mr-1 text-gray-400" />
                             <span className="text-gray-400 text-sm">
-                              Hosted by {property.host}
+                              Hosted by {listing.users.first_name}
                             </span>
                           </div>
                           <div className="flex items-center text-sm space-x-2 text-gray-400">
-                            <span>{property.bedrooms} bed</span>
+                            <span>{listing.bedrooms} bed</span>
                             <span>•</span>
-                            <span>{property.bathrooms} bath</span>
+                            <span>{listing.bathrooms} bath</span>
                           </div>
                         </div>
 
                         <p className="text-accent font-medium">
-                          ${property.price}/month
+                          ${listing.price}/month
                         </p>
                       </div>
 
@@ -764,21 +680,21 @@ const ConsultantDash = () => {
           )}
         </div>
 
-        {/* Watchlist Section */}
+        {/* Favourites Section */}
         <div
           className="mt-8 mb-6 animate-slide-up"
           style={{ animationDelay: "0.4s" }}
         >
           <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
-            <Heart className="mr-2 h-5 w-5" /> Your Watchlist (
-            {properties.filter((p) => p.watchlisted).length})
+            <Heart className="mr-2 h-5 w-5" /> Your Favourites (
+            {listings.filter((l) => l.favourited).length})
           </h2>
 
-          {properties.filter((p) => p.watchlisted).length === 0 ? (
+          {listings.filter((l) => l.favourited).length === 0 ? (
             <div className="glass-card p-8 text-center">
               <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">
-                Your watchlist is empty
+                Your favourites list is empty
               </h3>
               <p className="text-gray-400 mb-4">
                 Save properties you're interested in by clicking the heart icon.
@@ -787,23 +703,23 @@ const ConsultantDash = () => {
           ) : (
             <div className="overflow-x-auto pb-4">
               <div className="flex gap-4 min-w-max">
-                {properties
-                  .filter((p) => p.watchlisted)
-                  .map((property) => (
+                {listings
+                  .filter((l) => l.favourited)
+                  .map((listing) => (
                     <Card
-                      key={property.id}
+                      key={listing.listing_id}
                       className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
                     >
                       <div className="relative">
                         <img
-                          src={property.image}
-                          alt={property.title}
+                          // src={listing.image}
+                          alt={listing.title}
                           className="w-full h-40 object-cover"
                         />
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => toggleWatchlist(property.id)}
+                          onClick={() => toggleFavourite(listing.listing_id)}
                           className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                         >
                           <Heart className="h-5 w-5 fill-accent text-accent" />
@@ -813,21 +729,21 @@ const ConsultantDash = () => {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-base">
-                            {property.title}
+                            {listing.title}
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>{property.rating}</span>
+                            <span>0</span>
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-1">
-                          <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.location}
+                          <MapPin className="h-3 w-3 mr-1" /> {listing.city},{" "}
+                          {listing.area}
                         </p>
 
                         <p className="text-accent font-medium">
-                          ${property.price}/month
+                          ${listing.price}/month
                         </p>
 
                         <div className="mt-3 flex space-x-2">

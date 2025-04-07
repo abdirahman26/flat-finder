@@ -26,7 +26,7 @@ export const signUpFunc = async (
   password: string,
   id_number: number,
   first_name: string,
-  role: string
+  role: string,
 ): Promise<SignUpResponse> => {
   const supabase = await createClient();
 
@@ -148,7 +148,7 @@ export const addListing = async (
   created_at: string,
   description: string,
   price: number,
-  title: string
+  title: string,
 ) => {
   const supabase = await createClient();
 
@@ -246,7 +246,7 @@ export const getAllListings = async () => {
        users!listings_user_id_fkey(
         first_name
        )
-      `
+      `,
     );
 
     return { listingData: data ?? [], listingError: error ?? null };
@@ -317,7 +317,7 @@ export const getUserDetails = async () => {
   return { data: userData, error: null };
 };
 export const getUserDetailsById = async (
-  userId: string | string[] | undefined
+  userId: string | string[] | undefined,
 ) => {
   if (!userId) {
     return { data: null, error: new Error("No userId provided") };
@@ -338,4 +338,75 @@ export const getUserDetailsById = async (
   }
 
   return { data: userData, error: null };
+};
+
+export const addFavourite = async (
+  user_id: string,
+  listing_id: string | string[] | undefined,
+) => {
+  if (!listing_id) {
+    return { data: null, error: new Error("No listing_id provided") };
+  }
+  if (!user_id) {
+    return { data: null, error: new Error("No user_id provided") };
+  }
+
+  const id = Array.isArray(listing_id) ? listing_id[0] : listing_id;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("favourites")
+    .insert([{ user_id, listing_id: id }]); // Insert both user_id and listing_id
+
+  if (error) {
+    console.log(user_id, listing_id);
+    console.error("Error adding favourite:", error);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+};
+
+export const removeFavourite = async (
+  user_id: string,
+  listing_id: string | string[] | undefined,
+) => {
+  if (!listing_id) {
+    return { data: null, error: new Error("No listing_id provided") };
+  }
+  if (!user_id) {
+    return { data: null, error: new Error("No user_id provided") };
+  }
+
+  const id = Array.isArray(listing_id) ? listing_id[0] : listing_id;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("favourites")
+    .delete()
+    .eq("user_id", user_id)
+    .eq("listing_id", id);
+
+  if (error) {
+    console.log(user_id, listing_id);
+    console.error("Error removing favourite:", error);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+};
+
+export const getAllFavouritesByUserID = async (user_id: string) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("favourites")
+    .select("listing_id")
+    .eq("user_id", user_id);
+  if (error) {
+    console.error("Error fetching favourites:", error);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
 };
