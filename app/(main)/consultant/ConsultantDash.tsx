@@ -72,6 +72,7 @@ const ConsultantDash = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [priceFilter, setPriceFilter] = useState<[number, number]>([0, 5000]);
   const [bedroomsFilter, setBedroomsFilter] = useState<number>(0);
+  const [bathroomsFilter, setBathroomsFilter] = useState<number>(0);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
@@ -83,6 +84,8 @@ const ConsultantDash = () => {
     id_number: 0o000,
   });
   const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
+
+  const [filteredSearch, setFilteredSearch] = useState<PropertyListing[]>([]);
 
   const router = useRouter();
 
@@ -193,16 +196,6 @@ const ConsultantDash = () => {
     },
   ]);
 
-  // Filter options
-  const filterOptions = [
-    "All",
-    "Apartments",
-    "Houses",
-    "Cabins",
-    "Beachfront",
-    "Downtown",
-  ];
-
   // Handle watchlist toggle
   const toggleWatchlist = (id: string) => {
     setProperties(
@@ -236,6 +229,9 @@ const ConsultantDash = () => {
     const matchesBedrooms =
       bedroomsFilter === 0 || property.bedrooms >= bedroomsFilter;
 
+    const matchesBathrooms = // added for bathrooms filter
+      bathroomsFilter === 0 || property.bathrooms >= bathroomsFilter;
+
     const matchesFilter =
       selectedFilter === "All" ||
       (selectedFilter === "Apartments" &&
@@ -246,19 +242,8 @@ const ConsultantDash = () => {
         property.title.includes("Beachfront")) ||
       (selectedFilter === "Downtown" && property.title.includes("Downtown"));
 
-    return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
+    return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter && matchesBathrooms;
   });
-
-  // temp values for filter function
-
-  const [tempPriceFilter, setTempPriceFilter] = useState<[number, number]>([0, 5000]);
-  const [tempBedroomsFilter, setTempBedroomsFilter] = useState<number>(0); 
-
-  // Filter function to be applied AFTER apply button is clicked
-
-  const applyFilters = () => {
-    const filteredPropertiesExpanded = properties
-  }
 
   const fetchListings = async () => {
     try {
@@ -431,7 +416,7 @@ const ConsultantDash = () => {
           {/* Expanded Filters */}
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-between">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     Price Range
@@ -494,6 +479,34 @@ const ConsultantDash = () => {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
+                    Minimum Bathrooms
+                  </label>
+                  <div className="flex space-x-2">
+                    {[0, 1, 2, 3, 4, "5+"].map((num) => (
+                      <Button
+                        key={num}
+                        variant={
+                          bathroomsFilter === (num === "5+" ? 5 : Number(num))
+                            ? "secondary"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          setBathroomsFilter(num === "5+" ? 5 : Number(num))
+                        }
+                        className={
+                          bathroomsFilter === (num === "5+" ? 5 : Number(num))
+                            ? "bg-accent text-dark hover:bg-accent/90"
+                            : "border-white/20 hover:bg-white/10"
+                        }
+                      >
+                        {num}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">
                     Apply Reset
                   </label>
                   <div className="flex space-x-2">
@@ -510,40 +523,11 @@ const ConsultantDash = () => {
                     >
                       Reset Filters
                     </Button>
-                    <Button
-                      size="sm"
-                      className="bg-accent text-dark hover:bg-accent/90"
-                      
-                    >
-                      Apply
-                    </Button>
                   </div>
                 </div>
               </div>
             </div>
           )}
-        </div>
-
-        {/* Filter Pills */}
-        <div
-          className="mt-4 flex flex-wrap gap-2 animate-slide-up"
-          style={{ animationDelay: "0.2s" }}
-        >
-          {filterOptions.map((filter) => (
-            <Button
-              key={filter}
-              variant={selectedFilter === filter ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedFilter(filter)}
-              className={
-                selectedFilter === filter
-                  ? "bg-accent text-dark hover:bg-accent/90"
-                  : "border-white/20 hover:bg-white/10 text-white"
-              }
-            >
-              {filter}
-            </Button>
-          ))}
         </div>
 
         {/* Property Results */}
