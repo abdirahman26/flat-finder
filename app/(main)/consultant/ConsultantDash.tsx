@@ -367,7 +367,7 @@ const ConsultantDash = () => {
             </div>
             <div className="mt-4 md:mt-0">
               <Button className="bg-accent text-dark hover:bg-accent/90">
-                <Calendar className="mr-2 h-4 w-4" /> Schedule Viewings
+                <Calendar className="mr-2 h-4 w-4" /> View Schedulings
               </Button>
             </div>
           </div>
