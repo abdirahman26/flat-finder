@@ -3,10 +3,11 @@ import React from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { signOutFunc, getPendingListingsCount, getUserSignupsStats, getVerifiedListingsCount, getUnresolvedComplaintsCount, getAllListingsOrderedByStatus, getUniqueReviewers } from "@/app/(auth)/actions";
+import { signOutFunc, getPendingListingsCount, getUserSignupsStats, getVerifiedListingsCount, getUnresolvedComplaintsCount, getAllListingsOrderedByStatus, getUniqueReviewers, getAllComplaints } from "@/app/(auth)/actions";
 import DataTable from "@/components/DataTable";
 import StatCard from "@/components/StatCard";
 import { useListingsSubscription } from "@/hooks/useListingsSubscription";
+// import { OldDataTable } from "@/Downloads/flat-finder-main 2/components/OldDataTable";
 
 import {
   Users,
@@ -66,6 +67,18 @@ function AdminDashboardPage() {
     queryFn: getUniqueReviewers,
   });
 
+  const { data: complaintsData = [], isLoading: loadingComplaints } = useQuery({
+    queryKey: ["complaints"],
+    queryFn: getAllComplaints,
+  });
+
+  // useeffet for complaints
+  useEffect(() => {
+    if (!loadingComplaints) {
+      console.log("Complaints Data:", complaintsData);
+    }
+  }, [complaintsData, loadingComplaints]);
+
   useEffect(() => {
     if (!loadingListings) {
       console.log("Listings Data:", listingsData);
@@ -111,10 +124,14 @@ function AdminDashboardPage() {
         {loadingListings ? (
           <div>Loading listings...</div>
         ) : (
-          <DataTable data={listingsData} uniqueReviewers={uniqueReviewers} />
+          <DataTable data={listingsData} uniqueReviewers={uniqueReviewers} complaintData={complaintsData} />
 
         )}
       </div>
+
+
+
+      
     </>
   );
 }

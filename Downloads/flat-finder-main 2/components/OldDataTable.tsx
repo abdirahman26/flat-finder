@@ -106,19 +106,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "./ui/input"
 
-export const schema = z.object({
-  id: z.number(),
-  listingTitle: z.string(),
-  address: z.string(),
-  listingStatus: z.string(),
-  landlordName: z.string(),
-  landlordEmail: z.string(),
-  reviewer: z.string(),
-  isComplaint: z.boolean().optional().default(false),
-  complaintReason: z.string().optional(),
-  complaintStatus: z.enum(["Open", "Resolved"]).optional(),
-  reply: z.string().optional(),
-})
 
 // Create a separate component for the drag handle
 function DragHandle({ id }: { id: number }) {
@@ -139,9 +126,6 @@ function DragHandle({ id }: { id: number }) {
     </Button>
   )
 }
-
-
-
 
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -168,11 +152,37 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   )
 }
 
-export function DataTable({
+function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+  return (
+
+    <Button variant="link" className="text-muted w-fit px-0 text-left">
+      {item.listingTitle.length > 30 ? `${item.listingTitle.slice(0, 30)}...` : item.listingTitle}
+    </Button>
+   
+  )
+}
+
+export const schema = z.object({
+  id: z.number(),
+  listingTitle: z.string(),
+  address: z.string(),
+  listingStatus: z.string(),
+  landlordName: z.string(),
+  landlordEmail: z.string(),
+  reviewer: z.string(),
+  isComplaint: z.boolean().optional().default(false),
+  complaintReason: z.string().optional(),
+  complaintStatus: z.enum(["Open", "Resolved"]).optional(),
+  reply: z.string().optional(),
+})
+
+export function OldDataTable({
   data: initialData,
 }: {
   data: z.infer<typeof schema>[]
-}) {
+}) 
+
+{
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -878,59 +888,4 @@ export function DataTable({
   )
 }
 
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-  return (
-    <Drawer direction="right">
-      <DrawerTrigger asChild>
-        <Button variant="link" className="text-muted w-fit px-0 text-left">
-          {item.listingTitle.length > 30 ? `${item.listingTitle.slice(0, 30)}...` : item.listingTitle}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.listingTitle}</DrawerTitle>
-        </DrawerHeader>
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          <form className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="status">Listing Status</Label>
-                <Select defaultValue={item.listingStatus}>
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Verified">Verified</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Unverified">Unverified</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="reviewer">Reviewer</Label>
-                <Select defaultValue={item.reviewer}>
-                  <SelectTrigger id="reviewer" className="w-full">
-                    <SelectValue placeholder="Select a reviewer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Taher">Taher</SelectItem>
-                    <SelectItem value="Hesse">Hessa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </form>
-        </div>
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
-  )
-}
-
-
-export default DataTable
+export default OldDataTable

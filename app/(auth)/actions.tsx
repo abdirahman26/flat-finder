@@ -319,3 +319,35 @@ export const assignReviewer = async (listing_id: string, reviewer: string) => {
     throw error;
   }
 };
+
+
+export const getAllComplaints = async () => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("complaints")
+    .select(`
+      complaint_id,
+      title,
+      status,
+      users:user_id (
+        id,
+        role,
+        first_name,
+        email
+      ),
+      latest_message:view_latest_complaint_messages (
+        user_id,
+        message,
+        last_message_created_at,
+        role
+      )
+    `);
+
+  if (error) {
+    console.error("Error fetching complaints:", error);
+    throw error;
+  }
+
+  return data;
+};

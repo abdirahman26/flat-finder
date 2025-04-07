@@ -9,29 +9,86 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      complaint_messages: {
+        Row: {
+          complaint_id: string | null
+          created_at: string
+          message: string | null
+          message_id: string
+          user_id: string | null
+        }
+        Insert: {
+          complaint_id?: string | null
+          created_at?: string
+          message?: string | null
+          message_id?: string
+          user_id?: string | null
+        }
+        Update: {
+          complaint_id?: string | null
+          created_at?: string
+          message?: string | null
+          message_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaint_messages_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaints"
+            referencedColumns: ["complaint_id"]
+          },
+          {
+            foreignKeyName: "complaint_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complaints: {
         Row: {
           complaint_id: string
           created_at: string
-          description: string | null
+          listing_id: string
           status: string | null
           title: string | null
+          user_id: string
         }
         Insert: {
           complaint_id?: string
           created_at?: string
-          description?: string | null
+          listing_id?: string
           status?: string | null
           title?: string | null
+          user_id?: string
         }
         Update: {
           complaint_id?: string
           created_at?: string
-          description?: string | null
+          listing_id?: string
           status?: string | null
           title?: string | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "complaints_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["listing_id"]
+          },
+          {
+            foreignKeyName: "complaints_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listings: {
         Row: {
