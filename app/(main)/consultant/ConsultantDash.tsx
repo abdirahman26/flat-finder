@@ -224,11 +224,11 @@ const ConsultantDash = () => {
   };
 
   // Filter properties based on search and filters
-  const filteredProperties = properties.filter((property) => {
+  const filteredProperties = propertiess.filter((property) => {
     const matchesSearch =
       property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.location.toLowerCase().includes(searchQuery.toLowerCase());
+      property.description.toLowerCase().includes(searchQuery.toLowerCase());
+      // property.location.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesPrice =
       property.price >= priceFilter[0] && property.price <= priceFilter[1];
@@ -248,6 +248,17 @@ const ConsultantDash = () => {
 
     return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
   });
+
+  // temp values for filter function
+
+  const [tempPriceFilter, setTempPriceFilter] = useState<[number, number]>([0, 5000]);
+  const [tempBedroomsFilter, setTempBedroomsFilter] = useState<number>(0); 
+
+  // Filter function to be applied AFTER apply button is clicked
+
+  const applyFilters = () => {
+    const filteredPropertiesExpanded = properties
+  }
 
   const fetchListings = async () => {
     try {
@@ -502,6 +513,7 @@ const ConsultantDash = () => {
                     <Button
                       size="sm"
                       className="bg-accent text-dark hover:bg-accent/90"
+                      
                     >
                       Apply
                     </Button>
@@ -566,7 +578,7 @@ const ConsultantDash = () => {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {propertiess.map((listing) => (
+              {filteredProperties.map((listing) => (
                 <Card
                   key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
@@ -622,7 +634,7 @@ const ConsultantDash = () => {
                       <div className="flex items-center text-sm">
                         <User className="h-3 w-3 mr-1 text-gray-400" />
                         <span className="text-gray-400">
-                          Hosted by: {listing.users.first_name}
+                          {/* Hosted by: {listing.users.first_name} */}
                         </span>
                       </div>
                     </div>
@@ -637,7 +649,7 @@ const ConsultantDash = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleProfileRoute(listing.user_id)}
+                        // onClick={() => handleProfileRoute(listing.user_id)}
                         className="border-white/20 text-sm flex-1"
                       >
                         Contact Host
@@ -657,37 +669,37 @@ const ConsultantDash = () => {
             <div className="space-y-4">
               {filteredProperties.map((property) => (
                 <Card
-                  key={property.id}
+                  // key={property.id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
-                        src={property.image}
+                        // src={property.image}
                         alt={property.title}
                         className="w-full h-full object-cover"
                       />
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => toggleWatchlist(property.id)}
+                        // onClick={() => toggleWatchlist(property.id)}
                         className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                       >
-                        <Heart
+                        {/* <Heart
                           className={`h-5 w-5 ${
-                            property.watchlisted
+                            // property.watchlisted
                               ? "fill-accent text-accent"
                               : "text-white"
                           }`}
-                        />
+                        /> */}
                       </Button>
-                      {property.superhost && (
+                      {/* {property.superhost && ( */}
                         <div className="absolute top-2 left-2">
                           <Badge className="bg-accent text-dark">
                             Superhost
                           </Badge>
                         </div>
-                      )}
+                      {/* )} */}
                     </div>
 
                     <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
@@ -698,16 +710,16 @@ const ConsultantDash = () => {
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>{property.rating}</span>
+                            {/* <span>{property.rating}</span> */}
                             <span className="text-gray-400 text-sm ml-1">
-                              ({property.reviews})
+                              {/* ({property.reviews}) */}
                             </span>
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-2">
                           <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.location}
+                          {/* {property.location} */}
                         </p>
 
                         <p className="text-sm text-gray-400 mb-3">
@@ -718,7 +730,7 @@ const ConsultantDash = () => {
                           <div className="flex items-center">
                             <User className="h-3 w-3 mr-1 text-gray-400" />
                             <span className="text-gray-400 text-sm">
-                              Hosted by {property.host}
+                              {/* Hosted by {property.host} */}
                             </span>
                           </div>
                           <div className="flex items-center text-sm space-x-2 text-gray-400">
