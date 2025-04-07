@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/supabase/server";
-import { ParamValue } from "next/dist/server/request/params";
 
 interface AuthUser {
   id: string;
@@ -279,6 +278,36 @@ export const removeListing = async (listing_id: string) => {
     listingData: null,
     listingError: new Error("User not authenticated"),
   };
+};
+
+export const addListingImage = async (listing_id: string, url: string) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("listing_images").insert([
+    {
+      listing_id,
+      url,
+    },
+  ]);
+
+  return { error };
+};
+
+export const fetchImage = async () => {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.from("listing_images").select("*");
+
+    if (error) {
+      throw error;
+    }
+
+    return data; // Return the data fetched from the "listing_images" table
+  } catch (error) {
+    console.error("Error fetching images:", error);
+    throw new Error("Failed to fetch images");
+  }
 };
 
 export const updateListing = async () => {};

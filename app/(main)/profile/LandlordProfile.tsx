@@ -21,7 +21,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/supabase/client";
 import { getListing, getUserDetails } from "@/app/(auth)/actions";
 import { toast } from "sonner";
-import { set } from "react-hook-form";
 
 interface PropertyListing {
   listing_id: string;
@@ -33,6 +32,7 @@ interface PropertyListing {
   bedrooms: number;
   bathrooms: number;
   area_code: string;
+  image?: string | null;
 }
 
 interface UserData {
@@ -49,10 +49,33 @@ const LandlordProfile = () => {
     first_name: "",
     created_at: "",
     email: "",
-    id_number: 0o000,
+    id_number: 0,
   });
   const [initials, setInitials] = useState("");
 
+  // Function to fetch images for each listing
+  const fetchImage = async (listingId: string) => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("listing_images")
+        .select("url")
+        .eq("listing_id", listingId)
+        .single(); // Assuming there's one image per listing
+
+      if (error) {
+        console.error("Error fetching image:", error);
+        return null;
+      }
+
+      return data?.url || null; // Return the image URL or null if not found
+    } catch (err) {
+      console.error("Unexpected error fetching image:", err);
+      return null;
+    }
+  };
+
+  // Function to fetch listings and images
   const fetchListings = async () => {
     try {
       const supabase = createClient();
@@ -72,7 +95,16 @@ const LandlordProfile = () => {
         console.error("Error fetching listings:", listingError);
         toast.error("Failed to load listings.");
       } else if (listingData) {
-        setProperties(Array.isArray(listingData) ? listingData : [listingData]);
+        const listingsWithImages = await Promise.all(
+          listingData.map(async (listing: PropertyListing) => {
+            const imageUrl = await fetchImage(listing.listing_id);
+            return {
+              ...listing,
+              image: imageUrl,
+            };
+          })
+        );
+        setProperties(listingsWithImages);
       }
     } catch (err) {
       console.error("Unexpected error fetching listings:", err);
@@ -80,6 +112,7 @@ const LandlordProfile = () => {
     }
   };
 
+  // Function to format the date
   const formatDate = (isoString: string) => {
     return new Date(isoString).toLocaleString("en-US", {
       year: "numeric",
@@ -88,6 +121,7 @@ const LandlordProfile = () => {
     });
   };
 
+  // Function to fetch user details
   const fetchUserData = async () => {
     try {
       const supabase = createClient();
@@ -119,13 +153,14 @@ const LandlordProfile = () => {
     }
   };
 
+  // Use effect hook to run on component mount
   useEffect(() => {
     setMounted(true);
     fetchListings();
     fetchUserData();
   }, []);
 
-  // mock data for user and listings
+  // mock data for user
   const user = {
     verified: true,
     tripStats: {
@@ -206,7 +241,6 @@ const LandlordProfile = () => {
           </div>
 
           {/* Right Column - Listings */}
-          {/* CONDITIONALLY RENDER THIS IF USER IS A LANDLORD*/}
           <div className="md:w-2/3">
             <div
               className="glass-card p-6 animate-slide-up"
@@ -225,11 +259,17 @@ const LandlordProfile = () => {
                   >
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/3 h-48 md:h-auto relative">
-                        <img
-                          // src={listing.image}
-                          alt={listing.title}
-                          className="w-full h-full object-cover"
-                        />
+                        {listing.image ? (
+                          <img
+                            src={listing.image}
+                            alt={listing.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-500">
+                            No Image Available
+                          </div>
+                        )}
                       </div>
                       <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
                         <div>
@@ -244,13 +284,9 @@ const LandlordProfile = () => {
                             £{listing.price}
                           </p>
                           <div className="flex items-center">
-                            <Star className="h-4 w-4 text-custom-lime fill-custom-lime mr-1 " />
-                            <span className="mr-1 text-white">
-                              {/* {listing.rating} */}
-                              4.97
-                            </span>
+                            <Star className="h-4 w-4 text-custom-lime fill-custom-lime mr-1" />
+                            <span className="mr-1 text-white">4.97</span>
                             <span className="text-gray-400 text-sm">
-                              {/* ({listing.reviews} reviews) */}
                               Listing reviews here
                             </span>
                           </div>

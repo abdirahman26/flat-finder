@@ -26,11 +26,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
+import {
+  Plus,
+  Building,
+  Trash2,
+  Eye,
+  Edit,
+  Home,
+  ImageIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
-import { addListing, getListing, removeListing } from "@/app/(auth)/actions";
+import {
+  addListing,
+  addListingImage,
+  getListing,
+  removeListing,
+} from "@/app/(auth)/actions";
 
 // Define the PropertyListing type
 interface PropertyListing {
@@ -48,6 +61,7 @@ interface PropertyListing {
 const LandlordDash = () => {
   // Sample initial data for properties
   const [properties, setProperties] = useState<PropertyListing[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // New property form state
   const [newProperty, setNewProperty] = useState<
@@ -114,18 +128,46 @@ const LandlordDash = () => {
     });
   };
 
-  // Add a new property
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const supabase = createClient();
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `public/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("listing-images")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Image upload error:", uploadError);
+      toast.error("Failed to upload image.");
+      return;
+    }
+
+    const publicUrl = supabase.storage
+      .from("listing-images")
+      .getPublicUrl(filePath).data.publicUrl;
+    setPreviewUrl(publicUrl);
+
+    toast.success("Image uploaded successfully!");
+  };
+
   const handleAddProperty = async () => {
-    const newId = Date.now().toString();
     const createdAt = new Date().toISOString();
     const propertyToAdd = {
-      listing_id: newId,
       created_at: createdAt,
       ...newProperty,
     };
 
     try {
-      const { error } = await addListing(
+      const { data: addedListing, error } = await addListing(
         propertyToAdd.area,
         propertyToAdd.area_code,
         propertyToAdd.bathrooms,
@@ -144,7 +186,18 @@ const LandlordDash = () => {
         return;
       }
 
-      setProperties([...properties, propertyToAdd]);
+      if (previewUrl && addedListing?.listing_id) {
+        const { error: imageError } = await addListingImage(
+          addedListing?.listing_id,
+          previewUrl
+        );
+        if (imageError) {
+          console.error("Error adding listing image:", imageError);
+          toast.error("Failed to save listing image.");
+        }
+      }
+      //@ts-ignore
+      setProperties([...properties, addedListing]);
 
       // Reset form
       setNewProperty({
@@ -157,6 +210,8 @@ const LandlordDash = () => {
         bathrooms: 1,
         area_code: "",
       });
+
+      setPreviewUrl(null);
 
       toast.success("Property listing added successfully!");
     } catch (err) {
@@ -229,6 +284,54 @@ const LandlordDash = () => {
                   onChange={handleInputChange}
                   className="col-span-3"
                 />
+              </div>
+
+              {/* Image Upload Field */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <label htmlFor="image" className="text-right pt-2">
+                  Image
+                </label>
+                <div className="col-span-3">
+                  <label
+                    htmlFor="image"
+                    className="flex flex-col items-center justify-center w-full border border-input border-dashed rounded-md bg-background px-4 py-6 text-sm text-muted-foreground cursor-pointer hover:bg-gray-100 transition"
+                  >
+                    <ImageIcon className="mb-2 h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      Click to upload or drag and drop
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG, GIF up to 5MB
+                    </span>
+                    <input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {previewUrl && (
+                    <div className="relative mt-3 h-20 w-20 rounded-xl overflow-hidden border border-muted shadow">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="h-full w-full object-cover"
+                      />
+
+                      {/* ✖ Close Button on top-right of the image */}
+                      <button
+                        onClick={() => setPreviewUrl(null)}
+                        className="absolute top-1 right-1 bg-white text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-gray-200 transition"
+                        aria-label="Remove image"
+                        style={{ zIndex: 10 }}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
