@@ -54,10 +54,12 @@ interface PropertyListing {
   area: string;
   bedrooms: number;
   bathrooms: number;
-  area_code: string;
+  area_code: string
+  /*
   users: {
     first_name: string;
   };
+  */
 }
 
 interface UserData {
@@ -82,7 +84,7 @@ const ConsultantDash = () => {
     email: "",
     id_number: 0o000,
   });
-  const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
+  const [propertyListings, setPropertyListings] = useState<PropertyListing[]>([]);
 
   const router = useRouter();
 
@@ -238,16 +240,48 @@ const ConsultantDash = () => {
 
     const matchesFilter =
       selectedFilter === "All" ||
-      (selectedFilter === "Apartments" &&
-        property.title.includes("Apartment")) ||
+      (selectedFilter === "Apartments" && property.title.includes("Apartment")) ||
       (selectedFilter === "Houses" && property.title.includes("Home")) ||
       (selectedFilter === "Cabins" && property.title.includes("Cabin")) ||
-      (selectedFilter === "Beachfront" &&
-        property.title.includes("Beachfront")) ||
+      (selectedFilter === "Beachfront" && property.title.includes("Beachfront")) ||
       (selectedFilter === "Downtown" && property.title.includes("Downtown"));
 
     return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
   });
+
+  const searchListings = async (query = "") => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      let supabaseQuery = supabase.from("listings").select('*'); 
+  
+      if (query.trim() !== "") {
+        const keyword = `%${query.trim()}%`;
+        supabaseQuery = supabaseQuery.or(`title.ilike.${keyword},description.ilike.${keyword},area.ilike.${keyword},area_code.ilike.${keyword}`);
+      }
+  
+      const { data, error } = await supabaseQuery;
+  
+      if (error) {
+        console.error("Error fetching listings:", error.message);
+        toast.error("Could not fetch listings.");
+      } else {
+        setPropertyListings(Array.isArray(data) ? data : [data]);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+  
 
   const fetchListings = async () => {
     try {
@@ -267,7 +301,7 @@ const ConsultantDash = () => {
         console.error("Error fetching listings:", listingError);
         toast.error("Failed to load listings.");
       } else if (listingData) {
-        setPropertiess(
+        setPropertyListings(
           Array.isArray(listingData) ? listingData : [listingData]
         );
       }
@@ -323,6 +357,7 @@ const ConsultantDash = () => {
     setMounted(true);
     fetchUserData();
     fetchListings();
+    searchListings();
   }, []);
   return (
     <div
@@ -384,8 +419,11 @@ const ConsultantDash = () => {
               <Input
                 placeholder="Search by location, property type, or keywords..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-dark/60 border-white/10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+                  searchListings(value);}}
+                className="pl-9 bg-dark/60 border-white/10 text-white"
               />
             </div>
             <div className="flex gap-2">
@@ -566,7 +604,7 @@ const ConsultantDash = () => {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {propertiess.map((listing) => (
+              {propertyListings.map((listing) => (
                 <Card
                   key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
@@ -621,8 +659,8 @@ const ConsultantDash = () => {
                       </p>
                       <div className="flex items-center text-sm">
                         <User className="h-3 w-3 mr-1 text-gray-400" />
-                        <span className="text-gray-400">
-                          Hosted by: {listing.users.first_name}
+                        <span className="text-gray-400"> 
+                          
                         </span>
                       </div>
                     </div>
