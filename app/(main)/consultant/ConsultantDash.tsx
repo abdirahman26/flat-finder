@@ -35,18 +35,25 @@ import { useRouter } from "next/navigation";
 
 interface PropertyListing {
   listing_id: string;
-  user_id: string;
   title: string;
   description: string;
-  price: number;
+  image: string;
+  host: string;
+  user_id: string;
   city: string;
   area: string;
-  bedrooms: number;
-  bathrooms: number;
   area_code: string;
   users: {
     first_name: string;
   };
+
+  bedrooms: number;
+  bathrooms: number;
+  price: number;
+  rating: number;
+  reviews: number;
+
+  superhost: boolean;
   favourited: boolean;
 }
 
@@ -72,11 +79,19 @@ const ConsultantDash = () => {
     email: "",
     id_number: 0o000,
   });
-  const [listings, setListings] = useState<PropertyListing[]>([]);
+  const [properties, setProperties] = useState<PropertyListing[]>([]);
 
   const router = useRouter();
 
-  const fetchAllListings = async (): Promise<PropertyListing[]> => {
+  // Mock user data
+  // Is this needed?
+  const user = {
+    name: "Alex",
+    role: "Real Estate Consultant",
+    avatar: "AS",
+  };
+
+  const fetchAllProperties = async (): Promise<PropertyListing[]> => {
     try {
       const supabase = createClient();
       const { data: authData, error: authError } =
@@ -116,34 +131,56 @@ const ConsultantDash = () => {
       );
 
       return listingData.map((listing) => ({
-        ...listing,
+        listing_id: listing.listing_id,
+        title: listing.title,
+        description: listing.description,
+        location: `${listing.city}, ${listing.area}`,
+        price: listing.price,
+        bedrooms: listing.bedrooms,
+        bathrooms: listing.bathrooms,
+        rating: 0, // Placeholder for rating
+        reviews: 0, // Placeholder for reviews
+        image: null, // Placeholder for image
+        host: listing.reviewer,
+        superhost: false, // Placeholder for superhost
         favourited: favouritedListingIDs.has(listing.listing_id),
+        users: listing.users,
       }));
     } catch (error) {
-      console.error("Error fetching listings:", error);
+      console.error("Error fetching properties:", error);
       return [];
     }
   };
 
   useEffect(() => {
-    const loadListings = async () => {
-      const data = await fetchAllListings();
-      setListings(data);
+    const loadProperties = async () => {
+      const data = await fetchAllProperties();
+      setProperties(data);
     };
 
-    loadListings();
+    loadProperties();
   }, []);
 
+  // Filter options
+  const filterOptions = [
+    "All",
+    "Apartments",
+    "Houses",
+    "Cabins",
+    "Beachfront",
+    "Downtown",
+  ];
+
   const toggleFavourite = async (id: string) => {
-    setListings((prevListings) =>
-      prevListings.map((listing) =>
-        listing.listing_id === id
-          ? { ...listing, favourited: !listing.favourited }
-          : listing,
+    setProperties((prevProperties) =>
+      prevProperties.map((property) =>
+        property.listing_id === id
+          ? { ...property, favourited: !property.favourited }
+          : property,
       ),
     );
 
-    const updatedListing = listings.find((l) => l.listing_id === id);
+    const updatedProperty = properties.find((p) => p.listing_id === id);
 
     const supabase = createClient();
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -154,48 +191,74 @@ const ConsultantDash = () => {
       return;
     }
 
-    if (updatedListing) {
+    if (updatedProperty) {
       const user_id = authData.user.id;
 
-      if (updatedListing.favourited) {
+      if (updatedProperty.favourited) {
         console.log("removed favourite");
-        await removeFavourite(user_id, updatedListing.listing_id);
-        toast.success(`${updatedListing.title} removed from your watchlist!`);
+        await removeFavourite(user_id, updatedProperty.listing_id);
+        toast.success(`${updatedProperty.title} removed from your watchlist!`);
       } else {
         console.log("added favourite");
-        await addFavourite(user_id, updatedListing.listing_id);
-        toast.success(`${updatedListing.title} added to your watchlist!`);
+        await addFavourite(user_id, updatedProperty.listing_id);
+        toast.success(`${updatedProperty.title} added to your watchlist!`);
       }
     }
   };
 
-  // Filter listings based on search and filters
-  const filteredListings = listings.filter((listing) => {
+  // Filter properties based on search and filters
+  const filteredProperties = properties.filter((property) => {
     const matchesSearch =
-      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${listing.city}, ${listing.area}`
+      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (property.city + ", " + property.area)
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
 
     const matchesPrice =
-      listing.price >= priceFilter[0] && listing.price <= priceFilter[1];
+      property.price >= priceFilter[0] && property.price <= priceFilter[1];
 
     const matchesBedrooms =
-      bedroomsFilter === 0 || listing.bedrooms >= bedroomsFilter;
+      bedroomsFilter === 0 || property.bedrooms >= bedroomsFilter;
 
     const matchesFilter =
       selectedFilter === "All" ||
       (selectedFilter === "Apartments" &&
-        listing.title.includes("Apartment")) ||
-      (selectedFilter === "Houses" && listing.title.includes("Home")) ||
-      (selectedFilter === "Cabins" && listing.title.includes("Cabin")) ||
+        property.title.includes("Apartment")) ||
+      (selectedFilter === "Houses" && property.title.includes("Home")) ||
+      (selectedFilter === "Cabins" && property.title.includes("Cabin")) ||
       (selectedFilter === "Beachfront" &&
-        listing.title.includes("Beachfront")) ||
-      (selectedFilter === "Downtown" && listing.title.includes("Downtown"));
+        property.title.includes("Beachfront")) ||
+      (selectedFilter === "Downtown" && property.title.includes("Downtown"));
 
     return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
   });
+
+  const fetchListings = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const { listingData, listingError } = await getAllListings();
+
+      if (listingError) {
+        console.error("Error fetching listings:", listingError);
+        toast.error("Failed to load listings.");
+      } else if (listingData) {
+        setProperties(Array.isArray(listingData) ? listingData : [listingData]);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
 
   const formatDate = (isoString: string) => {
     return new Date(isoString).toLocaleString("en-US", {
@@ -242,18 +305,8 @@ const ConsultantDash = () => {
   useEffect(() => {
     setMounted(true);
     fetchUserData();
+    fetchListings();
   }, []);
-
-  // Filter options
-  const filterOptions = [
-    "All",
-    "Apartments",
-    "Houses",
-    "Cabins",
-    "Beachfront",
-    "Downtown",
-  ];
-
   return (
     <div
       className={`min-h-screen bg-dark ${
@@ -266,7 +319,7 @@ const ConsultantDash = () => {
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-accent text-dark text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {listings.filter((l) => l.favourited).length}
+              {properties.filter((p) => p.favourited).length}
             </span>
           </Button>
           <Button variant="ghost" size="icon">
@@ -471,10 +524,10 @@ const ConsultantDash = () => {
         >
           <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
             <Building className="mr-2 h-5 w-5" /> Properties (
-            {filteredListings.length})
+            {filteredProperties.length})
           </h2>
 
-          {filteredListings.length === 0 ? (
+          {filteredProperties.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <Search className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">No properties found</h3>
@@ -496,74 +549,82 @@ const ConsultantDash = () => {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredListings.map((listing) => (
+              {filteredProperties.map((property) => (
                 <Card
-                  key={listing.listing_id}
+                  key={property.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="relative">
                     <img
-                      // src={listing.image}
-                      alt={listing.title}
+                      // src={property.image}
+                      alt={property.title}
                       className="w-full h-48 object-cover"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleFavourite(listing.listing_id)}
+                      onClick={() => toggleFavourite(property.listing_id)}
                       className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                     >
                       <Heart
                         className={`h-5 w-5 ${
-                          listing.favourited
+                          property.favourited
                             ? "fill-accent text-accent"
                             : "text-white"
                         }`}
                       />
                     </Button>
+                    {false && (
+                      <div className="absolute top-2 left-2">
+                        <Badge className="bg-accent text-dark">Superhost</Badge>
+                      </div>
+                    )}
                   </div>
 
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg">{listing.title}</h3>
+                      <h3 className="font-semibold text-lg">
+                        {property.title}
+                      </h3>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                        <span>0</span>
+                        <span>Property rating here</span>
                       </div>
                     </div>
 
                     <p className="text-gray-400 text-sm flex items-center mb-2">
-                      <MapPin className="h-3 w-3 mr-1" /> {listing.city},{" "}
-                      {listing.area}
+                      <MapPin className="h-3 w-3 mr-1" /> {property.area_code}
+                      {""}
+                      {property.area}
                     </p>
 
                     <p className="text-sm text-gray-400 mb-3 line-clamp-2">
-                      {listing.description}
+                      {property.description}
                     </p>
 
                     <div className="flex items-center justify-between">
                       <p className="text-accent font-medium">
-                        ${listing.price}/month
+                        ${property.price}/month
                       </p>
                       <div className="flex items-center text-sm">
                         <User className="h-3 w-3 mr-1 text-gray-400" />
                         <span className="text-gray-400">
-                          Hosted by: {listing.users.first_name}
+                          Hosted by: {property.users.first_name}
                         </span>
                       </div>
                     </div>
 
                     <div className="mt-4 flex items-center text-sm space-x-2 text-gray-400">
-                      <span>{listing.bedrooms} bed</span>
+                      <span>{property.bedrooms} bed</span>
                       <span>•</span>
-                      <span>{listing.bathrooms} bath</span>
+                      <span>{property.bathrooms} bath</span>
                     </div>
 
                     <div className="mt-4 flex space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleProfileRoute(listing.user_id)}
+                        onClick={() => handleProfileRoute(property.user_id)}
                         className="border-white/20 text-sm flex-1"
                       >
                         Contact Host
@@ -581,71 +642,84 @@ const ConsultantDash = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredListings.map((listing) => (
+              {filteredProperties.map((property) => (
                 <Card
-                  key={listing.listing_id}
+                  key={property.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
-                        // src={listing.image}
-                        alt={listing.title}
+                        src={property.image}
+                        alt={property.title}
                         className="w-full h-full object-cover"
                       />
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => toggleFavourite(listing.listing_id)}
+                        onClick={() => toggleFavourite(property.listing_id)}
                         className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                       >
                         <Heart
                           className={`h-5 w-5 ${
-                            listing.favourited
+                            property.favourited
                               ? "fill-accent text-accent"
                               : "text-white"
                           }`}
                         />
                       </Button>
+                      {property.superhost && (
+                        <div className="absolute top-2 left-2">
+                          <Badge className="bg-accent text-dark">
+                            Superhost
+                          </Badge>
+                        </div>
+                      )}
                     </div>
 
                     <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-lg">
-                            {listing.title}
+                            {property.title}
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>0</span>
+                            <span>{property.rating}</span>
+                            <span className="text-gray-400 text-sm ml-1">
+                              ({property.reviews})
+                            </span>
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-2">
-                          <MapPin className="h-3 w-3 mr-1" /> {listing.city},{" "}
-                          {listing.area}
+                          <MapPin className="h-3 w-3 mr-1" />{" "}
+                          {(property.city + ", " + property.area)
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase())}
+                          ;
                         </p>
 
                         <p className="text-sm text-gray-400 mb-3">
-                          {listing.description}
+                          {property.description}
                         </p>
 
                         <div className="flex items-center space-x-4 mb-3">
                           <div className="flex items-center">
                             <User className="h-3 w-3 mr-1 text-gray-400" />
                             <span className="text-gray-400 text-sm">
-                              Hosted by {listing.users.first_name}
+                              Hosted by {property.host}
                             </span>
                           </div>
                           <div className="flex items-center text-sm space-x-2 text-gray-400">
-                            <span>{listing.bedrooms} bed</span>
+                            <span>{property.bedrooms} bed</span>
                             <span>•</span>
-                            <span>{listing.bathrooms} bath</span>
+                            <span>{property.bathrooms} bath</span>
                           </div>
                         </div>
 
                         <p className="text-accent font-medium">
-                          ${listing.price}/month
+                          ${property.price}/month
                         </p>
                       </div>
 
@@ -687,10 +761,10 @@ const ConsultantDash = () => {
         >
           <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
             <Heart className="mr-2 h-5 w-5" /> Your Favourites (
-            {listings.filter((l) => l.favourited).length})
+            {properties.filter((p) => p.favourited).length})
           </h2>
 
-          {listings.filter((l) => l.favourited).length === 0 ? (
+          {properties.filter((p) => p.favourited).length === 0 ? (
             <div className="glass-card p-8 text-center">
               <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">
@@ -703,23 +777,23 @@ const ConsultantDash = () => {
           ) : (
             <div className="overflow-x-auto pb-4">
               <div className="flex gap-4 min-w-max">
-                {listings
-                  .filter((l) => l.favourited)
-                  .map((listing) => (
+                {properties
+                  .filter((p) => p.favourited)
+                  .map((property) => (
                     <Card
-                      key={listing.listing_id}
+                      key={property.listing_id}
                       className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
                     >
                       <div className="relative">
                         <img
-                          // src={listing.image}
-                          alt={listing.title}
+                          src={property.image}
+                          alt={property.title}
                           className="w-full h-40 object-cover"
                         />
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => toggleFavourite(listing.listing_id)}
+                          onClick={() => toggleFavourite(property.listing_id)}
                           className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                         >
                           <Heart className="h-5 w-5 fill-accent text-accent" />
@@ -729,21 +803,24 @@ const ConsultantDash = () => {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-base">
-                            {listing.title}
+                            {property.title}
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>0</span>
+                            <span>{property.rating}</span>
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-1">
-                          <MapPin className="h-3 w-3 mr-1" /> {listing.city},{" "}
-                          {listing.area}
+                          <MapPin className="h-3 w-3 mr-1" />{" "}
+                          {(property.city + ", " + property.area)
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase())}
+                          ;
                         </p>
 
                         <p className="text-accent font-medium">
-                          ${listing.price}/month
+                          ${property.price}/month
                         </p>
 
                         <div className="mt-3 flex space-x-2">
