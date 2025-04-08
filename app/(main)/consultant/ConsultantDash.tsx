@@ -658,33 +658,31 @@ const ConsultantDash = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredProperties.map((property) => (
+              {propertiess.map((property) => (
                 <Card
-                  key={property.id}
+                  key={property.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
-                        src={property.image}
+                        src={property.listing_images?.url ?? undefined}
                         alt={property.title}
                         className="w-full h-full object-cover"
                       />
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => toggleWatchlist(property.id)}
+                        onClick={() => toggleWatchlist(property.listing_id)}
                         className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                       >
                         <Heart
                           className={`h-5 w-5 ${
-                            property.watchlisted
-                              ? "fill-accent text-accent"
-                              : "text-white"
+                            true ? "fill-accent text-accent" : "text-white"
                           }`}
                         />
                       </Button>
-                      {property.superhost && (
+                      {false && (
                         <div className="absolute top-2 left-2">
                           <Badge className="bg-accent text-dark">
                             Superhost
@@ -701,16 +699,16 @@ const ConsultantDash = () => {
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>{property.rating}</span>
+                            <span>Rating here</span>
                             <span className="text-gray-400 text-sm ml-1">
-                              ({property.reviews})
+                              property reviews here
                             </span>
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-2">
                           <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.location}
+                          {property.area_code},{""} {property.area}
                         </p>
 
                         <p className="text-sm text-gray-400 mb-3">
@@ -721,7 +719,7 @@ const ConsultantDash = () => {
                           <div className="flex items-center">
                             <User className="h-3 w-3 mr-1 text-gray-400" />
                             <span className="text-gray-400 text-sm">
-                              Hosted by {property.host}
+                              Hosted by: {property.users.first_name}
                             </span>
                           </div>
                           <div className="flex items-center text-sm space-x-2 text-gray-400">
