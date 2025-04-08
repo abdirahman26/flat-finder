@@ -439,11 +439,11 @@ export const getColumns = (
             <SelectContent align="end">
               {uniqueReviewers
                 .filter((r): r is string => r !== null)
-                .map((reviewer) => (
-                  <SelectItem key={reviewer} value={reviewer}>
+                .map((reviewer, index) => (
+                  <SelectItem key={`${reviewer}-${index}`} value={reviewer}>
                     {reviewer}
                   </SelectItem>
-                ))}
+              ))}
             </SelectContent>
           </Select>
         </>

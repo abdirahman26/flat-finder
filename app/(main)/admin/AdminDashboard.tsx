@@ -96,11 +96,11 @@ function AdminDashboardPage() {
     }
   }, [listingsData, loadingListings]);
 
-  // useEffect(() => {
-  //   if (!loadingUniqueReviewers) {
-  //     console.log("Unique Reviewers:", uniqueReviewers);
-  //   }
-  // }, [uniqueReviewers, loadingUniqueReviewers]);
+  useEffect(() => {
+    if (!loadingUniqueReviewers) {
+      console.log("Unique Reviewers:", uniqueReviewers);
+    }
+  }, [uniqueReviewers, loadingUniqueReviewers]);
   
   return (
     <>

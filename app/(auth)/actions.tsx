@@ -261,36 +261,36 @@ export const getAllListingsOrderedByStatus = async () => {
 };
 
 
-export const getUniqueReviewers = async () => {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("unique_reviewers")
-    .select("reviewer");
-
-  if (error) {
-    console.error("Error fetching reviewers:", error);
-    return [];
-  }
-
-  return data.map((row) => row.reviewer);
-};
-
 // export const getUniqueReviewers = async () => {
 //   const supabase = await createClient();
 
 //   const { data, error } = await supabase
-//     .from("users")
-//     .select("first_name")
-//     .eq("role", "admin");
+//     .from("unique_reviewers")
+//     .select("reviewer");
 
 //   if (error) {
-//     console.error("Error fetching admin reviewers:", error);
+//     console.error("Error fetching reviewers:", error);
 //     return [];
 //   }
 
-//   return data.map((row) => row.first_name);
+//   return data.map((row) => row.reviewer);
 // };
+
+export const getUniqueReviewers = async () => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("first_name")
+    .eq("role", "Admin");
+
+  if (error) {
+    console.error("Error fetching admin reviewers:", error);
+    return [];
+  }
+
+  return data.map((row) => row.first_name);
+};
 
 
 
