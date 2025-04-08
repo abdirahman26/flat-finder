@@ -84,7 +84,7 @@ const ConsultantDash = () => {
     email: "",
     id_number: 0o000,
   });
-  const [propertyListings, setPropertyListings] = useState<PropertyListing[]>([]);
+  const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
 
   const router = useRouter();
 
@@ -265,7 +265,8 @@ const ConsultantDash = () => {
   
       if (query.trim() !== "") {
         const keyword = `%${query.trim()}%`;
-        supabaseQuery = supabaseQuery.or(`title.ilike.${keyword},description.ilike.${keyword},area.ilike.${keyword},area_code.ilike.${keyword}`);
+        console.log("[searchListings] Called with query:", keyword);
+        supabaseQuery = supabaseQuery.or(`title.ilike."${keyword}",description.ilike."${keyword}",city.ilike."${keyword}"`);
       }
   
       const { data, error } = await supabaseQuery;
@@ -274,7 +275,8 @@ const ConsultantDash = () => {
         console.error("Error fetching listings:", error.message);
         toast.error("Could not fetch listings.");
       } else {
-        setPropertyListings(Array.isArray(data) ? data : [data]);
+        setPropertiess(data);
+        console.log(data);
       }
     } catch (err) {
       console.error("Unexpected error fetching listings:", err);
@@ -301,7 +303,7 @@ const ConsultantDash = () => {
         console.error("Error fetching listings:", listingError);
         toast.error("Failed to load listings.");
       } else if (listingData) {
-        setPropertyListings(
+        setPropertiess(
           Array.isArray(listingData) ? listingData : [listingData]
         );
       }
@@ -357,7 +359,6 @@ const ConsultantDash = () => {
     setMounted(true);
     fetchUserData();
     fetchListings();
-    searchListings();
   }, []);
   return (
     <div
@@ -422,7 +423,8 @@ const ConsultantDash = () => {
                 onChange={(e) => {
                   const value = e.target.value;
                   setSearchQuery(value);
-                  searchListings(value);}}
+                  searchListings(value);
+                }}
                 className="pl-9 bg-dark/60 border-white/10 text-white"
               />
             </div>
@@ -572,6 +574,26 @@ const ConsultantDash = () => {
           ))}
         </div>
 
+        {/* Listings Grid - Test Block for Search Bar */}
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {propertiess.length > 0 ? (
+            propertiess.map((property) => (
+              <div
+                key={property.listing_id}
+                className="bg-white/10 backdrop-blur rounded-2xl p-4 text-white shadow-md hover:scale-[1.02] transition-all"
+              >
+                <h2 className="text-xl font-semibold mb-1">{property.title}</h2>
+                <p className="text-sm text-gray-300">{property.city}</p>
+                <p className="mt-2 text-sm">{property.description}</p>
+              </div>
+            ))
+          ) : (
+            <p className="col-span-full text-center text-white text-opacity-70">
+              No listings found.
+            </p>
+          )}
+        </div>
+
         {/* Property Results */}
         <div
           className="mt-6 animate-slide-up"
@@ -604,14 +626,14 @@ const ConsultantDash = () => {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {propertyListings.map((listing) => (
+              {propertiess.map((listing) => (
                 <Card
                   key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="relative">
                     <img
-                      // src={property.image}
+                      //src={property.image}
                       alt={listing.title}
                       className="w-full h-48 object-cover"
                     />
@@ -701,7 +723,7 @@ const ConsultantDash = () => {
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
-                        src={property.image}
+                        //src={property.image}
                         alt={property.title}
                         className="w-full h-full object-cover"
                       />
