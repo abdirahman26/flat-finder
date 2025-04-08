@@ -221,7 +221,14 @@ export const getListingById = async (userId: string | string[] | undefined) => {
 
   const { data, error } = await supabase
     .from("listings")
-    .select("*")
+    .select(
+      `
+      *,
+      listing_images(
+        url
+      )
+    `
+    )
     .eq("user_id", id);
 
   return {
@@ -244,7 +251,10 @@ export const getAllListings = async () => {
        *,
        users!listings_user_id_fkey(
         first_name
-       )
+       ),
+       listing_images(
+        url
+      )
       `
     );
 

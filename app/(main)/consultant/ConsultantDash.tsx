@@ -58,6 +58,9 @@ interface PropertyListing {
   users: {
     first_name: string;
   };
+  listing_images: {
+    url: string | null;
+  } | null;
 }
 
 interface UserData {
@@ -573,7 +576,7 @@ const ConsultantDash = () => {
                 >
                   <div className="relative">
                     <img
-                      // src={property.image}
+                      src={listing.listing_images?.url ?? undefined}
                       alt={listing.title}
                       className="w-full h-48 object-cover"
                     />

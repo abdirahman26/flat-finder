@@ -44,6 +44,9 @@ interface PropertyListing {
   price: number;
   title: string;
   user_id: string;
+  listing_images: {
+    url: string | null;
+  } | null;
 }
 
 function Page() {
@@ -65,6 +68,26 @@ function Page() {
     });
   };
 
+  const fetchImage = async (listingId: string) => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("listing_images")
+        .select("url")
+        .eq("listing_id", listingId)
+        .maybeSingle(); // Assuming there's one image per listing
+
+      if (error) {
+        console.error("Error fetching image:", error);
+        return null;
+      }
+
+      return data?.url || null; // Return the image URL or null if not found
+    } catch (err) {
+      console.error("Unexpected error fetching image:", err);
+      return null;
+    }
+  };
   const fetchListings = async () => {
     try {
       const supabase = createClient();
@@ -195,7 +218,20 @@ function Page() {
                     className="bg-dark/60 border border-white/10"
                   >
                     <div className="flex flex-col md:flex-row">
-                      <div className="md:w-1/3 h-48 bg-gray-700" />
+                      <div className="md:w-1/3 h-48 bg-gray-700">
+                        {listing.listing_images?.url ? (
+                          <img
+                            src={listing.listing_images.url ?? undefined}
+                            alt={listing.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-500">
+                            No Image Available
+                          </div>
+                        )}
+                      </div>
+
                       <CardContent className="p-4 md:w-2/3">
                         <h3 className="text-white font-semibold text-lg mb-1">
                           {listing.title}
