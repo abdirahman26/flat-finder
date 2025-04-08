@@ -574,26 +574,6 @@ const ConsultantDash = () => {
           ))}
         </div>
 
-        {/* Listings Grid - Test Block for Search Bar */}
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {propertiess.length > 0 ? (
-            propertiess.map((property) => (
-              <div
-                key={property.listing_id}
-                className="bg-white/10 backdrop-blur rounded-2xl p-4 text-white shadow-md hover:scale-[1.02] transition-all"
-              >
-                <h2 className="text-xl font-semibold mb-1">{property.title}</h2>
-                <p className="text-sm text-gray-300">{property.city}</p>
-                <p className="mt-2 text-sm">{property.description}</p>
-              </div>
-            ))
-          ) : (
-            <p className="col-span-full text-center text-white text-opacity-70">
-              No listings found.
-            </p>
-          )}
-        </div>
-
         {/* Property Results */}
         <div
           className="mt-6 animate-slide-up"
@@ -604,7 +584,7 @@ const ConsultantDash = () => {
             {filteredProperties.length})
           </h2>
 
-          {filteredProperties.length === 0 ? (
+          {propertiess.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <Search className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">No properties found</h3>
