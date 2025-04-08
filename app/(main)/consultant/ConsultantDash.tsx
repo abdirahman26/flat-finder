@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import {
   Heart,
   Search,
@@ -311,32 +312,24 @@ const ConsultantDash = () => {
                   <label className="block text-sm text-gray-400 mb-2">
                     Price Range
                   </label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={priceFilter[0]}
-                      onChange={(e) =>
-                        setPriceFilter([
-                          parseInt(e.target.value) || 0,
-                          priceFilter[1],
-                        ])
-                      }
-                      className="bg-dark/60 border-white/10"
+                  <div className="space-y-2">
+                    <Slider
+                      value={priceFilter}
+                      onValueChange={(value) => {
+                        const [newMin, newMax] = value;
+                        if (newMin >= priceFilter[1]) return
+                        if (newMax <= priceFilter[0]) return
+
+                        setPriceFilter(value as [number, number])
+                      }}
+                      min={0}
+                      max={5000}
+                      step={50} 
                     />
-                    <span className="text-gray-400">to</span>
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={priceFilter[1]}
-                      onChange={(e) =>
-                        setPriceFilter([
-                          priceFilter[0],
-                          parseInt(e.target.value) || 5000,
-                        ])
-                      }
-                      className="bg-dark/60 border-white/10"
-                    />
+                    <div className="flex justify-between text-sm text-gray-400">
+                      <span>${priceFilter[0]}</span>
+                      <span>${priceFilter[1]}</span>
+                    </div>
                   </div>
                 </div>
                 <div>
