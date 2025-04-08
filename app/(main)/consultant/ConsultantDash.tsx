@@ -332,7 +332,7 @@ const ConsultantDash = () => {
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="mx-auto">
                   <label className="block text-sm text-gray-400 mb-2">
                     Minimum Bedrooms
                   </label>
@@ -360,7 +360,7 @@ const ConsultantDash = () => {
                     ))}
                   </div>
                 </div>
-                <div>
+                <div className="mx-auto">
                   <label className="block text-sm text-gray-400 mb-2">
                     Minimum Bathrooms
                   </label>
