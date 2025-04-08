@@ -21,12 +21,12 @@ const sliderVariants = cva(
 )
 
 const thumbVariants = cva(
-  "group block size-4 rounded-full bg-lime-300 shadow ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C851]/80 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 relative"
+  "group block size-4 rounded-full bg-custom-lime shadow ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C851]/80 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 relative"
 )
 
 const trackVariants = cva("relative h-1 w-full grow overflow-hidden rounded-full bg-white/10")
 
-const rangeVariants = cva("absolute h-full bg-lime-300")
+const rangeVariants = cva("absolute h-full bg-custom-lime")
 
 type SliderProps = React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> &
   VariantProps<typeof sliderVariants> & {
