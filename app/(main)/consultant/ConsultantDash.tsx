@@ -27,22 +27,20 @@ import { getAllListings, getUserDetails } from "@/app/(auth)/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Define property type
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  host: string;
-  superhost: boolean;
-  watchlisted: boolean;
-}
+// // Define property type
+// interface Property {
+//   id: string;
+//   title: string;
+//   description: string;
+//   location: string;
+//   price: number;
+//   bedrooms: number;
+//   bathrooms: number;
+//   rating: number;
+//   reviews: number;
+//   image: string;
+//   host: string;
+// }
 
 interface PropertyListing {
   listing_id: string;
@@ -58,6 +56,7 @@ interface PropertyListing {
   users: {
     first_name: string;
   };
+  image: string;
 }
 
 interface UserData {
@@ -71,8 +70,8 @@ const ConsultantDash = () => {
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [priceFilter, setPriceFilter] = useState<[number, number]>([0, 5000]);
-  const [bedroomsFilter, setBedroomsFilter] = useState<number>(0);
-  const [bathroomsFilter, setBathroomsFilter] = useState<number>(0);
+  const [bedroomsFilter, setBedroomsFilter] = useState<number>(1);
+  const [bathroomsFilter, setBathroomsFilter] = useState<number>(1);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
@@ -85,135 +84,26 @@ const ConsultantDash = () => {
   });
   const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
 
-  const [filteredSearch, setFilteredSearch] = useState<PropertyListing[]>([]);
-
   const router = useRouter();
-
-  // Mock user data
-  const user = {
-    name: "Alex",
-    role: "Real Estate Consultant",
-    avatar: "AS",
-  };
-
-  // Mock properties data
-  const [properties, setProperties] = useState<Property[]>([
-    {
-      id: "1",
-      title: "Modern Downtown Apartment",
-      description:
-        "Stylish apartment in the heart of downtown with amazing city views and amenities.",
-      location: "Seattle, Washington",
-      price: 1800,
-      bedrooms: 2,
-      bathrooms: 2,
-      rating: 4.92,
-      reviews: 68,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      host: "Sophie",
-      superhost: true,
-      watchlisted: false,
-    },
-    {
-      id: "2",
-      title: "Cozy Suburban Home",
-      description:
-        "Family-friendly home with a spacious backyard in a quiet neighborhood.",
-      location: "Portland, Oregon",
-      price: 2200,
-      bedrooms: 3,
-      bathrooms: 2,
-      rating: 4.85,
-      reviews: 43,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-      host: "Michael",
-      superhost: false,
-      watchlisted: false,
-    },
-    {
-      id: "3",
-      title: "Luxury Waterfront Condo",
-      description:
-        "High-end condo with spectacular water views and resort-style amenities.",
-      location: "San Diego, California",
-      price: 3200,
-      bedrooms: 2,
-      bathrooms: 2,
-      rating: 4.98,
-      reviews: 124,
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
-      host: "Emily",
-      superhost: true,
-      watchlisted: true,
-    },
-    {
-      id: "4",
-      title: "Urban Studio Loft",
-      description:
-        "Contemporary open-concept studio in the arts district with industrial finishes.",
-      location: "Austin, Texas",
-      price: 1600,
-      bedrooms: 1,
-      bathrooms: 1,
-      rating: 4.87,
-      reviews: 96,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
-      host: "David",
-      superhost: false,
-      watchlisted: false,
-    },
-    {
-      id: "5",
-      title: "Mountain View Cabin",
-      description:
-        "Rustic cabin with stunning mountain views, perfect for a weekend getaway.",
-      location: "Aspen, Colorado",
-      price: 2800,
-      bedrooms: 3,
-      bathrooms: 2,
-      rating: 4.96,
-      reviews: 72,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      host: "Sophie",
-      superhost: true,
-      watchlisted: false,
-    },
-    {
-      id: "6",
-      title: "Beachfront Paradise",
-      description:
-        "Step directly onto the sand from this beautiful beachfront property.",
-      location: "Miami, Florida",
-      price: 4200,
-      bedrooms: 4,
-      bathrooms: 3,
-      rating: 4.99,
-      reviews: 153,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-      host: "James",
-      superhost: true,
-      watchlisted: false,
-    },
-  ]);
 
   // Handle watchlist toggle
   const toggleWatchlist = (id: string) => {
-    setProperties(
-      properties.map((property) =>
-        property.id === id
-          ? { ...property, watchlisted: !property.watchlisted }
+    setPropertiess(
+      propertiess.map((property) =>
+        property.listing_id === id
+          ? { ...property }
           : property
       )
     );
 
-    const property = properties.find((p) => p.id === id);
-    if (property) {
-      if (!property.watchlisted) {
-        toast.success(`${property.title} added to your watchlist!`);
-      } else {
-        toast.success(`${property.title} removed from your watchlist!`);
-      }
-    }
+    // const property = propertiess.find((p) => p.listing_id === id);
+    // if (property) {
+    //   if (!property.) {
+    //     toast.success(`${property.title} added to your watchlist!`);
+    //   } else {
+    //     toast.success(`${property.title} removed from your watchlist!`);
+    //   }
+    // }
   };
 
   // Filter properties based on search and filters
@@ -332,7 +222,7 @@ const ConsultantDash = () => {
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-accent text-dark text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {properties.filter((p) => p.watchlisted).length}
+              {/* {propertiess.filter((p) => p.watchlisted).length} */}
             </span>
           </Button>
           <Button variant="ghost" size="icon">
@@ -454,7 +344,7 @@ const ConsultantDash = () => {
                     Minimum Bedrooms
                   </label>
                   <div className="flex space-x-2">
-                    {[0, 1, 2, 3, 4, "5+"].map((num) => (
+                    {[ 1, 2, 3, 4, "5+"].map((num) => (
                       <Button
                         key={num}
                         variant={
@@ -482,7 +372,7 @@ const ConsultantDash = () => {
                     Minimum Bathrooms
                   </label>
                   <div className="flex space-x-2">
-                    {[0, 1, 2, 3, 4, "5+"].map((num) => (
+                    {[ 1, 2, 3, 4, "5+"].map((num) => (
                       <Button
                         key={num}
                         variant={
@@ -516,7 +406,8 @@ const ConsultantDash = () => {
                       onClick={() => {
                         setSearchQuery("");
                         setPriceFilter([0, 5000]);
-                        setBedroomsFilter(0);
+                        setBedroomsFilter(1);
+                        setBathroomsFilter(1);
                         setSelectedFilter("All");
                       }}
                       className="border-white/20 hover:bg-white/10 text-white"
@@ -552,7 +443,8 @@ const ConsultantDash = () => {
                 onClick={() => {
                   setSearchQuery("");
                   setPriceFilter([0, 5000]);
-                  setBedroomsFilter(0);
+                  setBedroomsFilter(1);
+                  setBathroomsFilter(1);
                   setSelectedFilter("All");
                 }}
                 className="bg-accent text-dark hover:bg-accent/90"
@@ -569,7 +461,7 @@ const ConsultantDash = () => {
                 >
                   <div className="relative">
                     <img
-                      // src={property.image}
+                      // src={filteredProperties.image}
                       alt={listing.title}
                       className="w-full h-48 object-cover"
                     />
@@ -618,7 +510,7 @@ const ConsultantDash = () => {
                       <div className="flex items-center text-sm">
                         <User className="h-3 w-3 mr-1 text-gray-400" />
                         <span className="text-gray-400">
-                          {/* Hosted by: {listing.users.first_name} */}
+                          Hosted by: {listing.users.first_name}
                         </span>
                       </div>
                     </div>
@@ -633,7 +525,7 @@ const ConsultantDash = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        // onClick={() => handleProfileRoute(listing.user_id)}
+                        onClick={() => handleProfileRoute(listing.user_id)}
                         className="border-white/20 text-sm flex-1"
                       >
                         Contact Host
@@ -651,46 +543,46 @@ const ConsultantDash = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredProperties.map((property) => (
+              {filteredProperties.map((listing) => (
                 <Card
-                  // key={property.id}
+                  key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
                         // src={property.image}
-                        alt={property.title}
+                        alt={listing.title}
                         className="w-full h-full object-cover"
                       />
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="icon"
-                        // onClick={() => toggleWatchlist(property.id)}
+                        onClick={() => toggleWatchlist(property.listing_id)}
                         className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                       >
-                        {/* <Heart
+                        <Heart
                           className={`h-5 w-5 ${
-                            // property.watchlisted
+                            property.watchlisted
                               ? "fill-accent text-accent"
                               : "text-white"
                           }`}
-                        /> */}
-                      </Button>
-                      {/* {property.superhost && ( */}
+                        />
+                      </Button> */}
+                      {/* {property.superhost && (
                         <div className="absolute top-2 left-2">
                           <Badge className="bg-accent text-dark">
                             Superhost
                           </Badge>
                         </div>
-                      {/* )} */}
+                      )} */}
                     </div>
 
                     <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-lg">
-                            {property.title}
+                            {listing.title}
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
@@ -707,7 +599,7 @@ const ConsultantDash = () => {
                         </p>
 
                         <p className="text-sm text-gray-400 mb-3">
-                          {property.description}
+                          {listing.description}
                         </p>
 
                         <div className="flex items-center space-x-4 mb-3">
@@ -718,14 +610,14 @@ const ConsultantDash = () => {
                             </span>
                           </div>
                           <div className="flex items-center text-sm space-x-2 text-gray-400">
-                            <span>{property.bedrooms} bed</span>
+                            <span>{listing.bedrooms} bed</span>
                             <span>•</span>
-                            <span>{property.bathrooms} bath</span>
+                            <span>{listing.bathrooms} bath</span>
                           </div>
                         </div>
 
                         <p className="text-accent font-medium">
-                          ${property.price}/month
+                          ${listing.price}/month
                         </p>
                       </div>
 
@@ -767,10 +659,10 @@ const ConsultantDash = () => {
         >
           <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
             <Heart className="mr-2 h-5 w-5" /> Your Watchlist (
-            {properties.filter((p) => p.watchlisted).length})
+            {filteredProperties.filter((p) => 0).length})
           </h2>
 
-          {properties.filter((p) => p.watchlisted).length === 0 ? (
+          {filteredProperties.filter((p) => 0).length === 0 ? (
             <div className="glass-card p-8 text-center">
               <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">
@@ -783,11 +675,11 @@ const ConsultantDash = () => {
           ) : (
             <div className="overflow-x-auto pb-4">
               <div className="flex gap-4 min-w-max">
-                {properties
-                  .filter((p) => p.watchlisted)
+                {propertiess
+                  .filter((p) => 0)
                   .map((property) => (
                     <Card
-                      key={property.id}
+                      key={property.listing_id}
                       className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
                     >
                       <div className="relative">
@@ -799,7 +691,7 @@ const ConsultantDash = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => toggleWatchlist(property.id)}
+                          onClick={() => toggleWatchlist(property.listing_id)}
                           className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                         >
                           <Heart className="h-5 w-5 fill-accent text-accent" />
@@ -813,13 +705,13 @@ const ConsultantDash = () => {
                           </h3>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>{property.rating}</span>
+                            {/* <span>{property.rating}</span> */}
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-1">
                           <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.location}
+                          {/* {property.location} */}
                         </p>
 
                         <p className="text-accent font-medium">
