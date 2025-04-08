@@ -698,8 +698,9 @@ export function DataTable({
   complaintData,
 }: {
   data: z.infer<typeof schema>[];
-  complaintData: z.infer<typeof complaintSchema>[];
+ 
   uniqueReviewers: (string | null)[];
+  complaintData: z.infer<typeof complaintSchema>[];
 }) {
   // const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})

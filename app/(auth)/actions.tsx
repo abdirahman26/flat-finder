@@ -260,22 +260,6 @@ export const getAllListingsOrderedByStatus = async () => {
   return data ?? [];
 };
 
-
-// export const getUniqueReviewers = async () => {
-//   const supabase = await createClient();
-
-//   const { data, error } = await supabase
-//     .from("unique_reviewers")
-//     .select("reviewer");
-
-//   if (error) {
-//     console.error("Error fetching reviewers:", error);
-//     return [];
-//   }
-
-//   return data.map((row) => row.reviewer);
-// };
-
 export const getUniqueReviewers = async () => {
   const supabase = await createClient();
 
