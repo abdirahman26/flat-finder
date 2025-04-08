@@ -107,30 +107,30 @@ const ConsultantDash = () => {
   };
 
   // Filter properties based on search and filters
-  const filteredProperties = propertiess.filter((property) => {
+  const filteredProperties = propertiess.filter((listing) => {
     const matchesSearch =
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.description.toLowerCase().includes(searchQuery.toLowerCase());
-      // property.location.toLowerCase().includes(searchQuery.toLowerCase());
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase());
+      // listing.location.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesPrice =
-      property.price >= priceFilter[0] && property.price <= priceFilter[1];
+      listing.price >= priceFilter[0] && listing.price <= priceFilter[1];
 
     const matchesBedrooms =
-      bedroomsFilter === 0 || property.bedrooms >= bedroomsFilter;
+      bedroomsFilter === 0 || listing.bedrooms >= bedroomsFilter;
 
     const matchesBathrooms = // added for bathrooms filter
-      bathroomsFilter === 0 || property.bathrooms >= bathroomsFilter;
+      bathroomsFilter === 0 || listing.bathrooms >= bathroomsFilter;
 
     const matchesFilter =
       selectedFilter === "All" ||
       (selectedFilter === "Apartments" &&
-        property.title.includes("Apartment")) ||
-      (selectedFilter === "Houses" && property.title.includes("Home")) ||
-      (selectedFilter === "Cabins" && property.title.includes("Cabin")) ||
+        listing.title.includes("Apartment")) ||
+      (selectedFilter === "Houses" && listing.title.includes("Home")) ||
+      (selectedFilter === "Cabins" && listing.title.includes("Cabin")) ||
       (selectedFilter === "Beachfront" &&
-        property.title.includes("Beachfront")) ||
-      (selectedFilter === "Downtown" && property.title.includes("Downtown"));
+        listing.title.includes("Beachfront")) ||
+      (selectedFilter === "Downtown" && listing.title.includes("Downtown"));
 
     return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter && matchesBathrooms;
   });
@@ -222,7 +222,7 @@ const ConsultantDash = () => {
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-accent text-dark text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {/* {propertiess.filter((p) => p.watchlisted).length} */}
+              {propertiess.filter((p) => 0).length}
             </span>
           </Button>
           <Button variant="ghost" size="icon">
@@ -569,13 +569,6 @@ const ConsultantDash = () => {
                           }`}
                         />
                       </Button> */}
-                      {/* {property.superhost && (
-                        <div className="absolute top-2 left-2">
-                          <Badge className="bg-accent text-dark">
-                            Superhost
-                          </Badge>
-                        </div>
-                      )} */}
                     </div>
 
                     <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
