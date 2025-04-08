@@ -12,6 +12,7 @@ import {
   Building,
   Mail,
   IdCard,
+  ChartLine,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,7 @@ const LandlordProfile = () => {
         .from("listing_images")
         .select("url")
         .eq("listing_id", listingId)
-        .single(); // Assuming there's one image per listing
+        .maybeSingle(); // Assuming there's one image per listing
 
       if (error) {
         console.error("Error fetching image:", error);
@@ -226,15 +227,13 @@ const LandlordProfile = () => {
               style={{ animationDelay: "0.3s" }}
             >
               <h2 className="text-lg font-semibold mb-4 text-custom-lime flex items-center">
-                <Home className="mr-2 h-5 w-5" /> Landlord Stats
+                <ChartLine className="mr-2 h-5 w-5" /> Analytics
               </h2>
 
               <div className="space-y-3">
                 <div className="flex justify-between text-gray-300">
                   <span>Total Properties</span>
-                  <span className="font-medium">
-                    {user.tripStats.totalTrips}
-                  </span>
+                  <span className="font-medium">{properties.length}</span>
                 </div>
               </div>
             </div>
