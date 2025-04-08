@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { IconX } from "@tabler/icons-react" 
-import { updateListingStatus , deleteListing, assignReviewer } from "@/app/(auth)/actions";
+import { updateListingStatus , deleteListing, assignReviewer, updateComplaintStatus, deleteComplaint } from "@/app/(auth)/actions";
 import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
 import {
   DndContext,
@@ -36,6 +36,10 @@ import {
   IconLoader,
   IconPlus,
   IconTrendingUp,
+  IconArchive,
+  IconCheck,
+  IconClock,
+  IconSend,
 } from "@tabler/icons-react"
 import {
   ColumnDef,
@@ -85,6 +89,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { Input } from "@/components/ui/input"
+
+import messages from "@/app/(main)/admin/complaint_messages.json"
+
+import ComplaintCellViewer from "./ReplyComplaintDrawer";
+
+
 import {
   Table,
   TableBody,
@@ -118,23 +129,31 @@ export const complaintSchema = z.object({
   complaint_id: z.string(),
   listing_id: z.string(),
   user_id: z.string(),
-  role: z.enum(["landlord", "tenant"]),
-  status: z.enum(["pending", "resolved"]),
+  role: z.string(),
+  status: z.string(),
+
+  listings: z.object({
+    title: z.string(),
+    city: z.string(),
+  }),
+
   users: z.object({
     email: z.string(),
     first_name: z.string(),
-    role: z.enum(["landlord", "tenant"]),
+    role: z.string(),
   }),
   title: z.string(),
-  description: z.string().optional(),
   latest_message: z
-    .object({
+  .array(
+    z.object({
       user_id: z.string(),
       message: z.string(),
       last_message_created_at: z.string(),
       role: z.string(),
     })
-    .nullable(),
+  )
+  .nullable(),
+
 });
 
 
@@ -181,34 +200,34 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   )
 }
 
-  export function DraggableComplaintRow({
-    row,
-  }: {
-    row: Row<z.infer<typeof complaintSchema>>;
-  }) {
-    const { transform, transition, setNodeRef, isDragging } = useSortable({
-      id: row.original.complaint_id,
-    });
+export function DraggableComplaintRow({
+  row,
+}: {
+  row: Row<z.infer<typeof complaintSchema>>;
+}) {
+  const { transform, transition, setNodeRef, isDragging } = useSortable({
+    id: row.original.complaint_id,
+  });
 
-    return (
-      <TableRow
-        data-state={row.getIsSelected() && "selected"}
-        data-dragging={isDragging}
-        ref={setNodeRef}
-        className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected"
-        style={{
-          transform: CSS.Transform.toString(transform),
-          transition: transition,
-        }}
-      >
-        {row.getVisibleCells().map((cell) => (
-          <TableCell key={cell.id}>
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </TableCell>
-        ))}
-      </TableRow>
-    );
-  }
+  return (
+    <TableRow
+      data-state={row.getIsSelected() && "selected"}
+      data-dragging={isDragging}
+      ref={setNodeRef}
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition,
+      }}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  );
+}
 
 // function TableCell({ item }: { item: z.infer<typeof schema> }) {
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
@@ -219,10 +238,11 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   )
 }
 
-function ComplaintCellViewer({ item }: { item: z.infer<typeof complaintSchema> }) {
+
+export function ListingCellViewer({ item }: { item: z.infer<typeof complaintSchema> }) {
   return (
     <Button variant="link" className="text-muted w-fit px-0 text-left">
-      {item.title.length > 20 ? `${item.title.slice(0, 20)}...` : item.title}
+      {item.listings.title.length > 20 ? `${item.listings.title.slice(0, 20)}...` : item.listings.title}
     </Button>
   );
 }
@@ -256,22 +276,28 @@ function handleAction(action: string, listing: z.infer<typeof schema>) {
 // handlecomplaintAction
 function handleComplaintAction(action: string, complaint: z.infer<typeof complaintSchema>) {
   switch (action) {
-    case "Verify":
-      updateListingStatus(complaint.complaint_id, "Verified")
+    case "Resolved":
+      updateComplaintStatus(complaint.complaint_id, "Resolved");
       break;
-    case "FDM Approved":
-      updateListingStatus(complaint.complaint_id, "FDM Verified")
+    case "Reopen":
+      updateComplaintStatus(complaint.complaint_id, "Unresolved");
       break;
     case "Reject":
-      updateListingStatus(complaint.complaint_id, "Rejected")
+      updateComplaintStatus(complaint.complaint_id, "Rejected");
       break;
+    case "Close":
+      updateComplaintStatus(complaint.complaint_id, "Closed");
+      break;
+
     case "Delete":
-      deleteListing(complaint.complaint_id)
+      deleteComplaint(complaint.complaint_id);
       break;
+
     default:
       console.warn("Unhandled action:", action);
   }
 }
+
 
 // function handleAction(action: string, listing: z.infer<typeof schema>) {
 export const getColumns = (
@@ -432,7 +458,10 @@ export const getColumns = (
   
       // Define available options (excluding Delete)
       const options = (() => {
-        if (status === "Unverified") {
+        if (!row.original.reviewer) {
+          return [];
+        }
+        else if (status === "Unverified") {
           return ["Verify", "FDM Approved", "Reject"];
         } else if (status === "Rejected") {
           return ["Verify", "FDM Approved"];
@@ -440,7 +469,7 @@ export const getColumns = (
           return ["Verify", "Reject"];
         }
         else if (status === "Verified") {
-          return ["FDM Verified", "Reject"];
+          return ["FDM Approved", "Reject"];
         }
         return []; // Fallback for unknown status
       })();
@@ -520,22 +549,23 @@ export const getColumns2 = (): ColumnDef<z.infer<typeof complaintSchema>>[] => [
 
   // complaint title 
   {
-    accessorKey: "title",
+    accessorKey: "complaint_title",
     header: "Complaint Title",
-    cell: ({ row }) => <ComplaintCellViewer item={row.original} />,
+    cell: ({ row }) => <ComplaintCellViewer  item={row.original} />,
     enableHiding: false,
   },
 
   {
     accessorKey: "listing_title",
     header: "Listing Title",
-    cell: ({ row }) => <ComplaintCellViewer item={row.original} />,
+    cell: ({ row }) => <ListingCellViewer item={row.original}/>,
+
     enableHiding: false,
   },
   // role 
   {
     accessorKey: "role",
-    id: "address",
+    id: "role",
     header: "Role",
     cell: ({ row }) => (
       <div className="w-32">
@@ -548,7 +578,7 @@ export const getColumns2 = (): ColumnDef<z.infer<typeof complaintSchema>>[] => [
   // name 
   {
     accessorKey: "users.first_name",
-    id: "landlord Name",
+    id: "Name",
     header: "Name",
     cell: ({ row }) => {
       const name = row.original.users.first_name;
@@ -559,11 +589,10 @@ export const getColumns2 = (): ColumnDef<z.infer<typeof complaintSchema>>[] => [
   // email
   {
     accessorKey: "users.email",
-    id: "landlord Email",
+    id: "Email",
     header: "Email",
     cell: ({ row }) => {
       const email = row.original.users.email;
-      console.log("Email:", email);
       const display = email.length > 20 ? email.slice(0, 20) + "..." : email;
       return <div className="truncate text-sm text-muted">{display}</div>;
     },
@@ -571,22 +600,36 @@ export const getColumns2 = (): ColumnDef<z.infer<typeof complaintSchema>>[] => [
 
   // complaint status
   {
-    accessorKey: "is_verified",
-    id: "Listing Status",
+    id: "Complaint Status",
     header: "Complaint Status",
     cell: ({ row }) => {
-      const status = row.original.status;
-      const isVerified = row.original.status
+      const complaintStatus = row.original.status?.toLowerCase(); // normalize casing
+      const latestRole = row.original.latest_message?.[0]?.role.toLowerCase(); // normalize casing
+      // console.log("Complaint Status:", complaintStatus);
+      // console.log("Latest Role:", latestRole);
+      let label = "";
       let icon = null;
-      let text = status;
-
-      if (status === "resolved") {
-        icon = <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400 size-4" />;
-      } 
-
+      if (complaintStatus === "resolved") {
+        label = "Resolved";
+        icon = <IconCircleCheckFilled className="text-green-500 size-4" />;
+      } else if (complaintStatus === "rejected") {
+        label = "Rejected";
+        icon = <IconX className="text-red-500 size-4" />;
+      } else if (complaintStatus === "closed") {
+        label = "Closed";
+        icon = <IconArchive className="text-gray-500 size-4" />;
+      } else if (latestRole === "admin") {
+        label = "Replied";
+        icon = <IconCheck className="text-blue-500 size-4" />;
+      } else if (latestRole && latestRole !== "admin") {
+        // console.log("Latest Role:", latestRole);
+        label = "Waiting for Reply";
+        icon = <IconClock className="text-yellow-500 size-4" />;
+      }
+  
       return (
         <Badge variant="outline" className="text-muted px-1.5 gap-1 flex items-center">
-          {icon} {text}
+          {icon} {label}
         </Badge>
       );
     },
@@ -595,14 +638,19 @@ export const getColumns2 = (): ColumnDef<z.infer<typeof complaintSchema>>[] => [
   {
     id: "actions",
     cell: ({ row }) => {
-      const status = row.original.status;
+      const status = row.original.status?.toLowerCase();
   
-      // Define available options (excluding Delete)
       const options = (() => {
         if (status === "resolved") {
-          return ["Verify", "FDM Approved", "Reject"];
-        } 
-        return []; // Fallback for unknown status
+          return ["Reject", "Close"];
+        } else if (status === "unresolved") {
+          return ["Resolved", "Close", "Reject"];
+        } else if (status === "rejected") {
+          return ["Resolved", "Close"];
+        } else if (status === "closed") {
+          return ["Reopen"];
+        }
+        return [];
       })();
   
       return (
@@ -618,14 +666,14 @@ export const getColumns2 = (): ColumnDef<z.infer<typeof complaintSchema>>[] => [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-          {options.map((option) => (
-            <DropdownMenuItem
-              key={option}
-              onSelect={() => handleComplaintAction(option, row.original)}
-            >
-              {option}
-            </DropdownMenuItem>
-          ))}
+            {options.map((option) => (
+              <DropdownMenuItem
+                key={option}
+                onSelect={() => handleComplaintAction(option, row.original)}
+              >
+                {option}
+              </DropdownMenuItem>
+            ))}
   
             {options.length > 0 && <DropdownMenuSeparator />}
   
@@ -635,12 +683,11 @@ export const getColumns2 = (): ColumnDef<z.infer<typeof complaintSchema>>[] => [
             >
               Delete
             </DropdownMenuItem>
-
           </DropdownMenuContent>
         </DropdownMenu>
       );
     },
-  },
+  }
 ]
 
 
@@ -798,35 +845,33 @@ export function DataTable({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
+                <span className="hidden lg:inline">Customise Columns</span>
                 <span className="lg:hidden">Columns</span>
                 <IconChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
+            {(tabValue === "outline" ? table : complaintsTable)
+              .getAllColumns()
+              .filter(
+                (column) =>
+                  typeof column.accessorFn !== "undefined" && column.getCanHide()
+              )
+              .map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  className="capitalize"
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                >
+                  {typeof column.columnDef.header === "string"
+                    ? column.columnDef.header
+                    : column.id}
+                </DropdownMenuCheckboxItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
           <Button variant="outline" size="sm">
             <IconPlus />
             <span className="hidden lg:inline">Add Section</span>

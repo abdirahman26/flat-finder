@@ -3,7 +3,7 @@ import React from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { signOutFunc, getPendingListingsCount, getUserSignupsStats, getVerifiedListingsCount, getUnresolvedComplaintsCount, getAllListingsOrderedByStatus, getUniqueReviewers, getAllComplaints } from "@/app/(auth)/actions";
+import { signOutFunc, getPendingListingsCount, getUserSignupsStats, getVerifiedListingsCount, getUnresolvedComplaintsCount, getAllListingsOrderedByStatus, getUniqueReviewers, getAllComplaints, getComplaintMessages } from "@/app/(auth)/actions";
 import DataTable from "@/components/DataTable";
 import StatCard from "@/components/StatCard";
 import { useListingsSubscription } from "@/hooks/useListingsSubscription";
@@ -72,6 +72,17 @@ function AdminDashboardPage() {
     queryFn: getAllComplaints,
   });
 
+  const { data: messagesData = [], isLoading: loadingMessages } = useQuery({
+    queryKey: ["complaint-messages", "2e00a1ec-0b97-4ed8-9fca-d84b09a5acc8"],
+    queryFn: () => getComplaintMessages("2e00a1ec-0b97-4ed8-9fca-d84b09a5acc8"),
+  });
+
+  useEffect(() => {
+    if (!loadingMessages) {
+      console.log("Messages Data:", messagesData);
+    }
+  }, [messagesData, loadingMessages]);
+
   // useeffet for complaints
   useEffect(() => {
     if (!loadingComplaints) {
@@ -121,11 +132,16 @@ function AdminDashboardPage() {
       </div>
 
       <div>
-        {loadingListings ? (
+      {loadingListings ? (
           <div>Loading listings...</div>
+        ) : loadingComplaints ? (
+          <div>Loading complaints...</div>
         ) : (
-          <DataTable data={listingsData} uniqueReviewers={uniqueReviewers} complaintData={complaintsData} />
-
+          <DataTable
+            data={listingsData}
+            uniqueReviewers={uniqueReviewers}
+            complaintData={complaintsData}
+          />
         )}
       </div>
 

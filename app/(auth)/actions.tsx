@@ -148,7 +148,7 @@ export const getPendingListingsCount = async (): Promise<number> => {
   const { count, error } = await supabase
     .from("listings")
     .select("*", { count: "exact", head: true })
-    .eq("is_verified", "Unverified"); // Changed from `false` to `"Unverified"`
+    .eq("is_verified", "Unverified"); 
 
   if (error) {
     console.error("Error fetching pending listings count:", error);
@@ -222,7 +222,8 @@ export const getUnresolvedComplaintsCount = async (): Promise<number> => {
   const { count, error } = await supabase
     .from("complaints")
     .select("*", { count: "exact", head: true })
-    .neq("status", "resolved"); // status NOT EQUAL to 'resolved'
+    // count if status is not "Resolved" or "Closed" or "Rejected"
+    .in("status", ["Unresolved", "In Progress", "Pending"]);
 
   if (error) {
     console.error("Error fetching unresolved complaints count:", error);
@@ -274,6 +275,22 @@ export const getUniqueReviewers = async () => {
 
   return data.map((row) => row.reviewer);
 };
+
+// export const getUniqueReviewers = async () => {
+//   const supabase = await createClient();
+
+//   const { data, error } = await supabase
+//     .from("users")
+//     .select("first_name")
+//     .eq("role", "admin");
+
+//   if (error) {
+//     console.error("Error fetching admin reviewers:", error);
+//     return [];
+//   }
+
+//   return data.map((row) => row.first_name);
+// };
 
 
 
@@ -327,9 +344,16 @@ export const getAllComplaints = async () => {
   const { data, error } = await supabase
     .from("complaints")
     .select(`
-      complaint_id,
+      complaint_id,    
       title,
       status,
+      user_id,
+
+      listings:listing_id (
+        listing_id,
+        title
+      ),
+
       users:user_id (
         id,
         role,
@@ -350,4 +374,84 @@ export const getAllComplaints = async () => {
   }
 
   return data;
+};
+
+
+export const updateComplaintStatus = async (complaintId: string, status: string) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("complaints")
+    .update({ status })
+    .eq("complaint_id", complaintId);
+
+  if (error) {
+    console.error("Failed to update complaint status:", error);
+    throw error;
+  }
+};
+
+export const deleteComplaint = async (complaintId: string) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("complaints")
+    .delete()
+    .eq("complaint_id", complaintId);
+
+  if (error) {
+    console.error("Failed to delete complaint:", error);
+    throw error;
+  }
+};
+
+export const getComplaintMessages = async (complaintId: string) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("complaint_messages")
+    .select(`
+      user_id,
+      created_at,
+      message,
+      users:user_id (
+        role
+      )
+    `)
+    .eq("complaint_id", complaintId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Failed to fetch complaint messages:", error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const sendComplaintMessage = async ({
+  user_id,
+  complaint_id,
+  message,
+}: {
+  user_id: string;
+  complaint_id: string;
+  message: string;
+}) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("complaint_messages")
+    .insert({
+      user_id,
+      complaint_id,
+      message,
+    });
+
+  if (error) {
+    console.error("Failed to send message:", error);
+    throw error;
+  }
+
+  return true;
 };

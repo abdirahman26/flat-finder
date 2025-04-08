@@ -37,6 +37,20 @@ export function useListingsSubscription() {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["unresolved-complaints"] });
+          queryClient.invalidateQueries({ queryKey: ["complaints"] });
+        }
+      )
+
+      // complaint_messages table
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "complaint_messages",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["complaint-messages"] });
         }
       )
 
