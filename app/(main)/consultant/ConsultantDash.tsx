@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import {
   Heart,
   Search,
@@ -27,22 +28,6 @@ import { getAllListings, getUserDetails } from "@/app/(auth)/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Define property type
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  host: string;
-  superhost: boolean;
-  watchlisted: boolean;
-}
 
 interface PropertyListing {
   listing_id: string;
@@ -54,11 +39,14 @@ interface PropertyListing {
   area: string;
   bedrooms: number;
   bathrooms: number;
-  area_code: string;
+  area_code: string
   users: {
-    first_name: string;
-  };
-}
+    first_name: string | null;
+  } | null;
+  listing_images: {
+    url: string | null;
+  } | null;
+};
 
 interface UserData {
   first_name: string;
@@ -71,7 +59,8 @@ const ConsultantDash = () => {
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [priceFilter, setPriceFilter] = useState<[number, number]>([0, 5000]);
-  const [bedroomsFilter, setBedroomsFilter] = useState<number>(0);
+  const [bedroomsFilter, setBedroomsFilter] = useState<number>(1);
+  const [bathroomsFilter, setBathroomsFilter] = useState<number>(1);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
@@ -86,136 +75,19 @@ const ConsultantDash = () => {
 
   const router = useRouter();
 
-  // Mock user data
-  const user = {
-    name: "Alex",
-    role: "Real Estate Consultant",
-    avatar: "AS",
-  };
-
-  // Mock properties data
-  const [properties, setProperties] = useState<Property[]>([
-    {
-      id: "1",
-      title: "Modern Downtown Apartment",
-      description:
-        "Stylish apartment in the heart of downtown with amazing city views and amenities.",
-      location: "Seattle, Washington",
-      price: 1800,
-      bedrooms: 2,
-      bathrooms: 2,
-      rating: 4.92,
-      reviews: 68,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      host: "Sophie",
-      superhost: true,
-      watchlisted: false,
-    },
-    {
-      id: "2",
-      title: "Cozy Suburban Home",
-      description:
-        "Family-friendly home with a spacious backyard in a quiet neighborhood.",
-      location: "Portland, Oregon",
-      price: 2200,
-      bedrooms: 3,
-      bathrooms: 2,
-      rating: 4.85,
-      reviews: 43,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-      host: "Michael",
-      superhost: false,
-      watchlisted: false,
-    },
-    {
-      id: "3",
-      title: "Luxury Waterfront Condo",
-      description:
-        "High-end condo with spectacular water views and resort-style amenities.",
-      location: "San Diego, California",
-      price: 3200,
-      bedrooms: 2,
-      bathrooms: 2,
-      rating: 4.98,
-      reviews: 124,
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
-      host: "Emily",
-      superhost: true,
-      watchlisted: true,
-    },
-    {
-      id: "4",
-      title: "Urban Studio Loft",
-      description:
-        "Contemporary open-concept studio in the arts district with industrial finishes.",
-      location: "Austin, Texas",
-      price: 1600,
-      bedrooms: 1,
-      bathrooms: 1,
-      rating: 4.87,
-      reviews: 96,
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
-      host: "David",
-      superhost: false,
-      watchlisted: false,
-    },
-    {
-      id: "5",
-      title: "Mountain View Cabin",
-      description:
-        "Rustic cabin with stunning mountain views, perfect for a weekend getaway.",
-      location: "Aspen, Colorado",
-      price: 2800,
-      bedrooms: 3,
-      bathrooms: 2,
-      rating: 4.96,
-      reviews: 72,
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      host: "Sophie",
-      superhost: true,
-      watchlisted: false,
-    },
-    {
-      id: "6",
-      title: "Beachfront Paradise",
-      description:
-        "Step directly onto the sand from this beautiful beachfront property.",
-      location: "Miami, Florida",
-      price: 4200,
-      bedrooms: 4,
-      bathrooms: 3,
-      rating: 4.99,
-      reviews: 153,
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-      host: "James",
-      superhost: true,
-      watchlisted: false,
-    },
-  ]);
-
-  // Filter options
-  const filterOptions = [
-    "All",
-    "Apartments",
-    "Houses",
-    "Cabins",
-    "Beachfront",
-    "Downtown",
-  ];
-
   // Handle watchlist toggle
   const toggleWatchlist = (id: string) => {
-    setProperties(
-      properties.map((property) =>
-        property.id === id
-          ? { ...property, watchlisted: !property.watchlisted }
+    setPropertiess(
+      propertiess.map((property) =>
+        property.listing_id === id
+          ? { ...property }
           : property
       )
     );
 
-    const property = properties.find((p) => p.id === id);
+    const property = propertiess.find((p) => p.listing_id === id);
     if (property) {
-      if (!property.watchlisted) {
+      if (!property.title) {
         toast.success(`${property.title} added to your watchlist!`);
       } else {
         toast.success(`${property.title} removed from your watchlist!`);
@@ -224,30 +96,88 @@ const ConsultantDash = () => {
   };
 
   // Filter properties based on search and filters
-  const filteredProperties = properties.filter((property) => {
+  const filteredProperties = propertiess.filter((listing) => {
     const matchesSearch =
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.location.toLowerCase().includes(searchQuery.toLowerCase());
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.description.toLowerCase().includes(searchQuery.toLowerCase());
+      // listing.location.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesPrice =
-      property.price >= priceFilter[0] && property.price <= priceFilter[1];
+      listing.price >= priceFilter[0] && listing.price <= priceFilter[1];
 
     const matchesBedrooms =
-      bedroomsFilter === 0 || property.bedrooms >= bedroomsFilter;
+      bedroomsFilter === 0 || listing.bedrooms >= bedroomsFilter;
+
+    const matchesBathrooms = // added for bathrooms filter
+      bathroomsFilter === 0 || listing.bathrooms >= bathroomsFilter;
 
     const matchesFilter =
       selectedFilter === "All" ||
       (selectedFilter === "Apartments" &&
-        property.title.includes("Apartment")) ||
-      (selectedFilter === "Houses" && property.title.includes("Home")) ||
-      (selectedFilter === "Cabins" && property.title.includes("Cabin")) ||
+        listing.title.includes("Apartment")) ||
+      (selectedFilter === "Houses" && listing.title.includes("Home")) ||
+      (selectedFilter === "Cabins" && listing.title.includes("Cabin")) ||
       (selectedFilter === "Beachfront" &&
-        property.title.includes("Beachfront")) ||
-      (selectedFilter === "Downtown" && property.title.includes("Downtown"));
+        listing.title.includes("Beachfront")) ||
+      (selectedFilter === "Downtown" && listing.title.includes("Downtown"));
 
-    return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
+    return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter && matchesBathrooms;
   });
+
+  const searchListings = async (query = "") => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      let supabaseQuery = supabase
+  .from("listings")
+  .select(`
+    listing_id,
+    user_id,
+    title,
+    description,
+    price,
+    city,
+    area,
+    bedrooms,
+    bathrooms,
+    area_code,
+    users!listings_user_id_fkey(
+      first_name
+    ),
+    listing_images (
+      url
+    )
+  `);
+  
+      if (query.trim() !== "") {
+        const keyword = `%${query.trim()}%`;
+        console.log("[searchListings] Called with query:", keyword);
+        supabaseQuery = supabaseQuery.or(`title.ilike."${keyword}",description.ilike."${keyword}",city.ilike."${keyword}"`);
+      }
+  
+      const { data, error } = await supabaseQuery;
+  
+      if (error) {
+        console.error("Error fetching listings:", error.message);
+        toast.error("Could not fetch listings.");
+      } else {
+        setPropertiess(data);
+        console.log(data);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+  
 
   const fetchListings = async () => {
     try {
@@ -336,7 +266,7 @@ const ConsultantDash = () => {
           <Button variant="ghost" size="icon" className="relative">
             <Heart className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-accent text-dark text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {properties.filter((p) => p.watchlisted).length}
+              {propertiess.filter((p) => 0).length}
             </span>
           </Button>
           <Button variant="ghost" size="icon">
@@ -384,8 +314,12 @@ const ConsultantDash = () => {
               <Input
                 placeholder="Search by location, property type, or keywords..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-dark/60 border-white/10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+                  searchListings(value);
+                }}
+                className="pl-9 bg-dark/60 border-white/10 text-white"
               />
             </div>
             <div className="flex gap-2">
@@ -420,45 +354,37 @@ const ConsultantDash = () => {
           {/* Expanded Filters */}
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-between">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     Price Range
                   </label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={priceFilter[0]}
-                      onChange={(e) =>
-                        setPriceFilter([
-                          parseInt(e.target.value) || 0,
-                          priceFilter[1],
-                        ])
-                      }
-                      className="bg-dark/60 border-white/10"
+                  <div className="space-y-2">
+                    <Slider
+                      value={priceFilter}
+                      onValueChange={(value) => {
+                        const [newMin, newMax] = value;
+                        if (newMin >= priceFilter[1]) return
+                        if (newMax <= priceFilter[0]) return
+
+                        setPriceFilter(value as [number, number])
+                      }}
+                      min={0}
+                      max={5000}
+                      step={50} 
                     />
-                    <span className="text-gray-400">to</span>
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={priceFilter[1]}
-                      onChange={(e) =>
-                        setPriceFilter([
-                          priceFilter[0],
-                          parseInt(e.target.value) || 5000,
-                        ])
-                      }
-                      className="bg-dark/60 border-white/10"
-                    />
+                    <div className="flex justify-between text-sm text-gray-400">
+                      <span>${priceFilter[0]}</span>
+                      <span>${priceFilter[1]}</span>
+                    </div>
                   </div>
                 </div>
-                <div>
+                <div className="mx-auto">
                   <label className="block text-sm text-gray-400 mb-2">
                     Minimum Bedrooms
                   </label>
                   <div className="flex space-x-2">
-                    {[0, 1, 2, 3, 4, "5+"].map((num) => (
+                    {[ 1, 2, 3, 4, "5+"].map((num) => (
                       <Button
                         key={num}
                         variant={
@@ -481,6 +407,34 @@ const ConsultantDash = () => {
                     ))}
                   </div>
                 </div>
+                <div className="mx-auto">
+                  <label className="block text-sm text-gray-400 mb-2">
+                    Minimum Bathrooms
+                  </label>
+                  <div className="flex space-x-2">
+                    {[ 1, 2, 3, 4, "5+"].map((num) => (
+                      <Button
+                        key={num}
+                        variant={
+                          bathroomsFilter === (num === "5+" ? 5 : Number(num))
+                            ? "secondary"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          setBathroomsFilter(num === "5+" ? 5 : Number(num))
+                        }
+                        className={
+                          bathroomsFilter === (num === "5+" ? 5 : Number(num))
+                            ? "bg-accent text-dark hover:bg-accent/90"
+                            : "border-white/20 hover:bg-white/10"
+                        }
+                      >
+                        {num}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     Apply Reset
@@ -492,46 +446,19 @@ const ConsultantDash = () => {
                       onClick={() => {
                         setSearchQuery("");
                         setPriceFilter([0, 5000]);
-                        setBedroomsFilter(0);
+                        setBedroomsFilter(1);
+                        setBathroomsFilter(1);
                         setSelectedFilter("All");
                       }}
                       className="border-white/20 hover:bg-white/10 text-white"
                     >
                       Reset Filters
                     </Button>
-                    <Button
-                      size="sm"
-                      className="bg-accent text-dark hover:bg-accent/90"
-                    >
-                      Apply
-                    </Button>
                   </div>
                 </div>
               </div>
             </div>
           )}
-        </div>
-
-        {/* Filter Pills */}
-        <div
-          className="mt-4 flex flex-wrap gap-2 animate-slide-up"
-          style={{ animationDelay: "0.2s" }}
-        >
-          {filterOptions.map((filter) => (
-            <Button
-              key={filter}
-              variant={selectedFilter === filter ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedFilter(filter)}
-              className={
-                selectedFilter === filter
-                  ? "bg-accent text-dark hover:bg-accent/90"
-                  : "border-white/20 hover:bg-white/10 text-white"
-              }
-            >
-              {filter}
-            </Button>
-          ))}
         </div>
 
         {/* Property Results */}
@@ -544,7 +471,7 @@ const ConsultantDash = () => {
             {filteredProperties.length})
           </h2>
 
-          {filteredProperties.length === 0 ? (
+          {propertiess.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <Search className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">No properties found</h3>
@@ -556,7 +483,8 @@ const ConsultantDash = () => {
                 onClick={() => {
                   setSearchQuery("");
                   setPriceFilter([0, 5000]);
-                  setBedroomsFilter(0);
+                  setBedroomsFilter(1);
+                  setBathroomsFilter(1);
                   setSelectedFilter("All");
                 }}
                 className="bg-accent text-dark hover:bg-accent/90"
@@ -566,14 +494,14 @@ const ConsultantDash = () => {
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {propertiess.map((listing) => (
+              {filteredProperties.map((listing) => (
                 <Card
                   key={listing.listing_id}
                   className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
                   <div className="relative">
                     <img
-                      // src={property.image}
+                      src={listing.listing_images?.url ?? undefined}
                       alt={listing.title}
                       className="w-full h-48 object-cover"
                     />
@@ -589,11 +517,6 @@ const ConsultantDash = () => {
                         }`}
                       />
                     </Button>
-                    {false && (
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-accent text-dark">Superhost</Badge>
-                      </div>
-                    )}
                   </div>
 
                   <CardContent className="p-4">
@@ -620,9 +543,9 @@ const ConsultantDash = () => {
                         ${listing.price}/month
                       </p>
                       <div className="flex items-center text-sm">
-                        <User className="h-3 w-3 mr-1 text-gray-400" />
-                        <span className="text-gray-400">
-                          Hosted by: {listing.users.first_name}
+                        <User className="h-3 w-3 mr-1 text-gray-600" />
+                        <span className="text-gray-400"> 
+                          Host: {listing.users?.first_name}
                         </span>
                       </div>
                     </div>
@@ -653,201 +576,188 @@ const ConsultantDash = () => {
                 </Card>
               ))}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredProperties.map((property) => (
-                <Card
-                  key={property.id}
-                  className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
-                >
-                  <div className="flex flex-col md:flex-row">
-                    <div className="md:w-1/3 h-48 md:h-auto relative">
-                      <img
-                        src={property.image}
-                        alt={property.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => toggleWatchlist(property.id)}
-                        className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
-                      >
-                        <Heart
-                          className={`h-5 w-5 ${
-                            property.watchlisted
-                              ? "fill-accent text-accent"
-                              : "text-white"
-                          }`}
-                        />
-                      </Button>
-                      {property.superhost && (
-                        <div className="absolute top-2 left-2">
-                          <Badge className="bg-accent text-dark">
-                            Superhost
-                          </Badge>
-                        </div>
-                      )}
+                  ) : (
+                    <div className="space-y-4">
+                      {propertiess.map((property) => (
+                        <Card
+                          key={property.listing_id}
+                          className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
+                        >
+                          <div className="flex flex-col md:flex-row">
+                            <div className="md:w-1/3 h-48 md:h-auto relative">
+                              <img
+                                src={property.listing_images?.url ?? undefined}
+                                alt={property.title}
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => toggleWatchlist(property.listing_id)}
+                                className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
+                              >
+                              </Button>
+                  
+                            </div>
+        
+                            <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
+                              <div>
+                                <div className="flex justify-between items-start mb-2">
+                                  <h3 className="font-semibold text-lg">
+                                    {property.title}
+                                  </h3>
+                                  <div className="flex items-center">
+                                    <Star className="h-4 w-4 text-accent fill-accent mr-1" />
+                                    <span>Rating here</span>
+                                    <span className="text-gray-400 text-sm ml-1">
+                                      Reviews here
+                                    </span>
+                                  </div>
+                                </div>
+        
+                                <p className="text-gray-400 text-sm flex items-center mb-2">
+                                  <MapPin className="h-3 w-3 mr-1" />{" "}
+                                  {property.area_code}{""}{property.area}
+                                </p>
+        
+                                <p className="text-sm text-gray-400 mb-3">
+                                  {property.description}
+                                </p>
+        
+                                <div className="flex items-center space-x-4 mb-3">
+                                  <div className="flex items-center">
+                                    <User className="h-3 w-3 mr-1 text-gray-400" />
+                                    <span className="text-gray-400 text-sm">
+                                      {/* Hosted by: {property.users.first_name} */}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center text-sm space-x-2 text-gray-400">
+                                    <span>{property.bedrooms} bed</span>
+                                    <span>•</span>
+                                    <span>{property.bathrooms} bath</span>
+                                  </div>
+                                </div>
+        
+                                <p className="text-accent font-medium">
+                                  ${property.price}/month
+                                </p>
+                              </div>
+        
+                              <div className="mt-4 flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-white/20 text-sm"
+                                >
+                                  View Details
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="bg-accent text-dark hover:bg-accent/90 text-sm"
+                                >
+                                  <Calendar className="h-3 w-3 mr-1" /> Schedule
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-white/20 text-sm"
+                                >
+                                  <MessageCircle className="h-3 w-3 mr-1" /> Contact
+                                  Host
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
-
-                    <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-lg">
-                            {property.title}
-                          </h3>
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>{property.rating}</span>
-                            <span className="text-gray-400 text-sm ml-1">
-                              ({property.reviews})
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-gray-400 text-sm flex items-center mb-2">
-                          <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.location}
-                        </p>
-
-                        <p className="text-sm text-gray-400 mb-3">
-                          {property.description}
-                        </p>
-
-                        <div className="flex items-center space-x-4 mb-3">
-                          <div className="flex items-center">
-                            <User className="h-3 w-3 mr-1 text-gray-400" />
-                            <span className="text-gray-400 text-sm">
-                              Hosted by {property.host}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-sm space-x-2 text-gray-400">
-                            <span>{property.bedrooms} bed</span>
-                            <span>•</span>
-                            <span>{property.bathrooms} bath</span>
-                          </div>
-                        </div>
-
-                        <p className="text-accent font-medium">
-                          ${property.price}/month
-                        </p>
+                  )}
+                </div>
+        
+                {/* Watchlist Section */}
+                <div
+                  className="mt-8 mb-6 animate-slide-up"
+                  style={{ animationDelay: "0.4s" }}
+                >
+                  <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
+                    <Heart className="mr-2 h-5 w-5" /> Your Watchlist (
+                    {propertiess.filter((p) => p).length})
+                  </h2>
+        
+                  {propertiess.filter((p) => p).length === 0 ? (
+                    <div className="glass-card p-8 text-center">
+                      <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-xl font-medium mb-2">
+                        Your watchlist is empty
+                      </h3>
+                      <p className="text-gray-400 mb-4">
+                        Save properties you're interested in by clicking the heart icon.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto pb-4">
+                      <div className="flex gap-4 min-w-max">
+                        {propertiess
+                          .filter((p) => p)
+                          .map((property) => (
+                            <Card
+                              key={property.listing_id}
+                              className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
+                            >
+                              <div className="relative">
+                                <img
+                                  src={property.listing_images?.url ?? undefined}
+                                  alt={property.title}
+                                  className="w-full h-40 object-cover"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => toggleWatchlist(property.listing_id)}
+                                  className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
+                                >
+                                  <Heart className="h-5 w-5 fill-accent text-accent" />
+                                </Button>
+                              </div>
+        
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h3 className="font-semibold text-base">
+                                    {property.title}
+                                  </h3>
+                                  <div className="flex items-center">
+                                    <Star className="h-4 w-4 text-accent fill-accent mr-1" />
+                                    <span>Rating Here</span>
+                                  </div>
+                                </div>
+        
+                                <p className="text-gray-400 text-sm flex items-center mb-1">
+                                  <MapPin className="h-3 w-3 mr-1" />{" "}
+                                  {property.area_code}
+                                </p>
+        
+                                <p className="text-accent font-medium">
+                                  ${property.price}/month
+                                </p>
+        
+                                <div className="mt-3 flex space-x-2">
+                                  <Button
+                                    size="sm"
+                                    className="bg-accent text-dark hover:bg-accent/90 text-sm flex-1"
+                                  >
+                                    <Calendar className="h-3 w-3 mr-1" /> Schedule
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
                       </div>
-
-                      <div className="mt-4 flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-white/20 text-sm"
-                        >
-                          View Details
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-accent text-dark hover:bg-accent/90 text-sm"
-                        >
-                          <Calendar className="h-3 w-3 mr-1" /> Schedule
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-white/20 text-sm"
-                        >
-                          <MessageCircle className="h-3 w-3 mr-1" /> Contact
-                          Host
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Watchlist Section */}
-        <div
-          className="mt-8 mb-6 animate-slide-up"
-          style={{ animationDelay: "0.4s" }}
-        >
-          <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
-            <Heart className="mr-2 h-5 w-5" /> Your Watchlist (
-            {properties.filter((p) => p.watchlisted).length})
-          </h2>
-
-          {properties.filter((p) => p.watchlisted).length === 0 ? (
-            <div className="glass-card p-8 text-center">
-              <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-medium mb-2">
-                Your watchlist is empty
-              </h3>
-              <p className="text-gray-400 mb-4">
-                Save properties you're interested in by clicking the heart icon.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto pb-4">
-              <div className="flex gap-4 min-w-max">
-                {properties
-                  .filter((p) => p.watchlisted)
-                  .map((property) => (
-                    <Card
-                      key={property.id}
-                      className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
-                    >
-                      <div className="relative">
-                        <img
-                          src={property.image}
-                          alt={property.title}
-                          className="w-full h-40 object-cover"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleWatchlist(property.id)}
-                          className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
-                        >
-                          <Heart className="h-5 w-5 fill-accent text-accent" />
-                        </Button>
-                      </div>
-
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-base">
-                            {property.title}
-                          </h3>
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                            <span>{property.rating}</span>
-                          </div>
-                        </div>
-
-                        <p className="text-gray-400 text-sm flex items-center mb-1">
-                          <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.location}
-                        </p>
-
-                        <p className="text-accent font-medium">
-                          ${property.price}/month
-                        </p>
-
-                        <div className="mt-3 flex space-x-2">
-                          <Button
-                            size="sm"
-                            className="bg-accent text-dark hover:bg-accent/90 text-sm flex-1"
-                          >
-                            <Calendar className="h-3 w-3 mr-1" /> Schedule
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ConsultantDash;
+          );
+        };
+        
+        export default ConsultantDash;
