@@ -54,14 +54,14 @@ interface PropertyListing {
   area: string;
   bedrooms: number;
   bathrooms: number;
-  area_code: string;
+  area_code: string
   users: {
-    first_name: string;
-  };
+    first_name: string | null;
+  } | null;
   listing_images: {
     url: string | null;
   } | null;
-}
+};
 
 interface UserData {
   first_name: string;
@@ -241,16 +241,69 @@ const ConsultantDash = () => {
 
     const matchesFilter =
       selectedFilter === "All" ||
-      (selectedFilter === "Apartments" &&
-        property.title.includes("Apartment")) ||
+      (selectedFilter === "Apartments" && property.title.includes("Apartment")) ||
       (selectedFilter === "Houses" && property.title.includes("Home")) ||
       (selectedFilter === "Cabins" && property.title.includes("Cabin")) ||
-      (selectedFilter === "Beachfront" &&
-        property.title.includes("Beachfront")) ||
+      (selectedFilter === "Beachfront" && property.title.includes("Beachfront")) ||
       (selectedFilter === "Downtown" && property.title.includes("Downtown"));
 
     return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter;
   });
+
+  const searchListings = async (query = "") => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      let supabaseQuery = supabase
+  .from("listings")
+  .select(`
+    listing_id,
+    user_id,
+    title,
+    description,
+    price,
+    city,
+    area,
+    bedrooms,
+    bathrooms,
+    area_code,
+    users!listings_user_id_fkey(
+      first_name
+    ),
+    listing_images (
+      url
+    )
+  `);
+  
+      if (query.trim() !== "") {
+        const keyword = `%${query.trim()}%`;
+        console.log("[searchListings] Called with query:", keyword);
+        supabaseQuery = supabaseQuery.or(`title.ilike."${keyword}",description.ilike."${keyword}",city.ilike."${keyword}"`);
+      }
+  
+      const { data, error } = await supabaseQuery;
+  
+      if (error) {
+        console.error("Error fetching listings:", error.message);
+        toast.error("Could not fetch listings.");
+      } else {
+        setPropertiess(data);
+        console.log(data);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+  
 
   const fetchListings = async () => {
     try {
@@ -387,8 +440,12 @@ const ConsultantDash = () => {
               <Input
                 placeholder="Search by location, property type, or keywords..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-dark/60 border-white/10"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+                  searchListings(value);
+                }}
+                className="pl-9 bg-dark/60 border-white/10 text-white"
               />
             </div>
             <div className="flex gap-2">
@@ -547,7 +604,7 @@ const ConsultantDash = () => {
             {filteredProperties.length})
           </h2>
 
-          {filteredProperties.length === 0 ? (
+          {propertiess.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <Search className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">No properties found</h3>
@@ -592,11 +649,6 @@ const ConsultantDash = () => {
                         }`}
                       />
                     </Button>
-                    {false && (
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-accent text-dark">Superhost</Badge>
-                      </div>
-                    )}
                   </div>
 
                   <CardContent className="p-4">
@@ -623,9 +675,9 @@ const ConsultantDash = () => {
                         ${listing.price}/month
                       </p>
                       <div className="flex items-center text-sm">
-                        <User className="h-3 w-3 mr-1 text-gray-400" />
-                        <span className="text-gray-400">
-                          Hosted by: {listing.users.first_name}
+                        <User className="h-3 w-3 mr-1 text-gray-600" />
+                        <span className="text-gray-400"> 
+                          Host: {listing.users?.first_name}
                         </span>
                       </div>
                     </div>
@@ -676,19 +728,8 @@ const ConsultantDash = () => {
                         onClick={() => toggleWatchlist(property.listing_id)}
                         className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                       >
-                        <Heart
-                          className={`h-5 w-5 ${
-                            true ? "fill-accent text-accent" : "text-white"
-                          }`}
-                        />
                       </Button>
-                      {false && (
-                        <div className="absolute top-2 left-2">
-                          <Badge className="bg-accent text-dark">
-                            Superhost
-                          </Badge>
-                        </div>
-                      )}
+          
                     </div>
 
                     <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
@@ -701,14 +742,14 @@ const ConsultantDash = () => {
                             <Star className="h-4 w-4 text-accent fill-accent mr-1" />
                             <span>Rating here</span>
                             <span className="text-gray-400 text-sm ml-1">
-                              property reviews here
+                              Reviews here
                             </span>
                           </div>
                         </div>
 
                         <p className="text-gray-400 text-sm flex items-center mb-2">
                           <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.area_code},{""} {property.area}
+                          {property.area_code}{""}{property.area}
                         </p>
 
                         <p className="text-sm text-gray-400 mb-3">
@@ -719,7 +760,7 @@ const ConsultantDash = () => {
                           <div className="flex items-center">
                             <User className="h-3 w-3 mr-1 text-gray-400" />
                             <span className="text-gray-400 text-sm">
-                              Hosted by: {property.users.first_name}
+                              {/* Hosted by: {property.users.first_name} */}
                             </span>
                           </div>
                           <div className="flex items-center text-sm space-x-2 text-gray-400">
