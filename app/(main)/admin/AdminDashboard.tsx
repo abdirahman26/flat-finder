@@ -16,8 +16,6 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-import data from "./data.json";
-
 function AdminDashboardPage() {
   const router = useRouter();
   useListingsSubscription(); 
