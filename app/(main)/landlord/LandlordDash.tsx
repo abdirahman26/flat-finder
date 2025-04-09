@@ -26,24 +26,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Plus,
-  Building,
-  Trash2,
-  Eye,
-  Edit,
-  Home,
-  ImageIcon,
-} from "lucide-react";
+import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
-import {
-  addListing,
-  addListingImage,
-  getListing,
-  removeListing,
-} from "@/app/(auth)/actions";
+import { addListing, getListing, removeListing } from "@/app/(auth)/actions";
 
 // Define the PropertyListing type
 interface PropertyListing {
@@ -61,7 +48,6 @@ interface PropertyListing {
 const LandlordDash = () => {
   // Sample initial data for properties
   const [properties, setProperties] = useState<PropertyListing[]>([]);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // New property form state
   const [newProperty, setNewProperty] = useState<
@@ -128,46 +114,18 @@ const LandlordDash = () => {
     });
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    const supabase = createClient();
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `public/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("listing-images")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (uploadError) {
-      console.error("Image upload error:", uploadError);
-      toast.error("Failed to upload image.");
-      return;
-    }
-
-    const publicUrl = supabase.storage
-      .from("listing-images")
-      .getPublicUrl(filePath).data.publicUrl;
-    setPreviewUrl(publicUrl);
-
-    toast.success("Image uploaded successfully!");
-  };
-
+  // Add a new property
   const handleAddProperty = async () => {
+    const newId = Date.now().toString();
     const createdAt = new Date().toISOString();
     const propertyToAdd = {
+      listing_id: newId,
       created_at: createdAt,
       ...newProperty,
     };
 
     try {
-      const { data: addedListing, error } = await addListing(
+      const { error } = await addListing(
         propertyToAdd.area,
         propertyToAdd.area_code,
         propertyToAdd.bathrooms,
@@ -186,18 +144,7 @@ const LandlordDash = () => {
         return;
       }
 
-      if (previewUrl && addedListing?.listing_id) {
-        const { error: imageError } = await addListingImage(
-          addedListing?.listing_id,
-          previewUrl
-        );
-        if (imageError) {
-          console.error("Error adding listing image:", imageError);
-          toast.error("Failed to save listing image.");
-        }
-      }
-      //@ts-ignore
-      setProperties([...properties, addedListing]);
+      setProperties([...properties, propertyToAdd]);
 
       // Reset form
       setNewProperty({
@@ -210,8 +157,6 @@ const LandlordDash = () => {
         bathrooms: 1,
         area_code: "",
       });
-
-      setPreviewUrl(null);
 
       toast.success("Property listing added successfully!");
     } catch (err) {
@@ -250,11 +195,14 @@ const LandlordDash = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
+      <div className="w-full px-6 py-4 rounded-xl border-2 border-gray-600 bg-[rgba(57,63,36,0.1)] mb-5">
+        <h1 className="text-3xl font-bold text-accent">Landlord Dashboard</h1>
+      </div>
+      <div className="flex items-center justify-between mb-8 px-6">
         <div>
-          <h1 className="text-3xl font-bold">Landlord Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your property listings
+          <h2 className="text-4xl font-bold text-white">Manage Listings</h2>
+          <p className="text-muted-foreground mt-1 font-medium">
+            Add, view and manage your property listings
           </p>
         </div>
         <Dialog>
@@ -284,54 +232,6 @@ const LandlordDash = () => {
                   onChange={handleInputChange}
                   className="col-span-3"
                 />
-              </div>
-
-              {/* Image Upload Field */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <label htmlFor="image" className="text-right pt-2">
-                  Image
-                </label>
-                <div className="col-span-3">
-                  <label
-                    htmlFor="image"
-                    className="flex flex-col items-center justify-center w-full border border-input border-dashed rounded-md bg-background px-4 py-6 text-sm text-muted-foreground cursor-pointer hover:bg-gray-100 transition"
-                  >
-                    <ImageIcon className="mb-2 h-6 w-6 text-muted-foreground" />
-                    <span className="text-sm font-medium">
-                      Click to upload or drag and drop
-                    </span>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      PNG, JPG, GIF up to 5MB
-                    </span>
-                    <input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-
-                  {previewUrl && (
-                    <div className="relative mt-3 h-20 w-20 rounded-xl overflow-hidden border border-muted shadow">
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="h-full w-full object-cover"
-                      />
-
-                      {/* ✖ Close Button on top-right of the image */}
-                      <button
-                        onClick={() => setPreviewUrl(null)}
-                        className="absolute top-1 right-1 bg-white text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-gray-200 transition"
-                        aria-label="Remove image"
-                        style={{ zIndex: 10 }}
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
@@ -439,23 +339,21 @@ const LandlordDash = () => {
       </div>
 
       {/* Property Listings Table */}
-      <Card className="bg-custom-dark mb-8 text-gray-300">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Building className="mr-2 h-5 w-5" />
+      <div className="px-6">
+        <div className="overflow-hidden rounded-xl border border-gray-600 bg-custom-dark mb-8 text-white px-7 py-7 shadow-[0_4px_10px_rgba(0,0,0,0.4)]">
+          <h3 className="text-2xl text-white font-semibold flex items-center mb-8">
+            <Building className="mr-2 h-5 w-5 text-accent" />
             Your Property Listings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Bedrooms</TableHead>
-                <TableHead>Bathrooms</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+            <TableHeader className="text-white">
+              <TableRow className="hover:bg-transparent text-white relative">
+                <TableHead className="text-white">Title</TableHead>
+                <TableHead className="text-white">Location</TableHead>
+                <TableHead className="text-white">Price</TableHead>
+                <TableHead className="text-white">Bedrooms</TableHead>
+                <TableHead className="text-white">Bathrooms</TableHead>
+                <TableHead className="text-white text-right ">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -470,14 +368,14 @@ const LandlordDash = () => {
                 </TableRow>
               ) : (
                 properties.map((property) => (
-                  <TableRow key={property.listing_id}>
+                  <TableRow key={property.listing_id} className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected">
                     <TableCell className="font-medium">
                       {property.title}
                     </TableCell>
                     <TableCell>
                       {property.area}, {property.city}
                     </TableCell>
-                    <TableCell>${property.price}/month</TableCell>
+                    <TableCell><span className="text-accent">${property.price}/month</span></TableCell>
                     <TableCell>{property.bedrooms}</TableCell>
                     <TableCell>{property.bathrooms}</TableCell>
                     <TableCell className="text-right">
@@ -505,8 +403,8 @@ const LandlordDash = () => {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Property Details Dialog */}
       <Dialog
