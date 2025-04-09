@@ -262,28 +262,6 @@ const ConsultantDash = () => {
         mounted ? "animate-fade-in" : "opacity-0"
       }`}
     >
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-10 glass-card bg-dark/90 backdrop-blur-lg px-4 py-3 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center space-x-6 ">
-          <Button variant="ghost" size="icon" className="relative">
-            <Heart className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 bg-accent text-dark text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {propertiess.filter((p) => 0).length}
-            </span>
-          </Button>
-          <Button variant="ghost" size="icon">
-            <MessageCircle className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center bg-dark/60 rounded-full px-3 py-1 border border-white/10">
-            <div className="h-8 w-8 bg-accent text-dark rounded-full flex items-center justify-center mr-2">
-              <span>{initials}</span>
-            </div>
-            <span className="hidden md:inline-block text-sm text-white">
-              {userData.first_name}
-            </span>
-          </div>
-        </div>
-      </nav>
 
       <div className="pt-16 px-4 md:px-6 max-w-7xl mx-auto">
         {/* Welcome Header */}
@@ -524,10 +502,6 @@ const ConsultantDash = () => {
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-lg">{listing.title}</h3>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                        <span>Property rating here</span>
-                      </div>
                     </div>
 
                     <p className="text-gray-400 text-sm flex items-center mb-2">
@@ -592,13 +566,14 @@ const ConsultantDash = () => {
                                 alt={property.title}
                                 className="w-full h-full object-cover"
                               />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => toggleWatchlist(property.listing_id)}
-                                className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
-                              >
-                              </Button>
+                            <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => toggleWatchlist(property.listing_id)}
+                                  className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
+                                >
+                                  <Heart className="h-5 w-5 fill-accent text-accent" />
+                                </Button>
                   
                             </div>
         
@@ -608,13 +583,6 @@ const ConsultantDash = () => {
                                   <h3 className="font-semibold text-lg">
                                     {property.title}
                                   </h3>
-                                  <div className="flex items-center">
-                                    <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                                    <span>Rating here</span>
-                                    <span className="text-gray-400 text-sm ml-1">
-                                      Reviews here
-                                    </span>
-                                  </div>
                                 </div>
         
                                 <p className="text-gray-400 text-sm flex items-center mb-2">
@@ -628,9 +596,9 @@ const ConsultantDash = () => {
         
                                 <div className="flex items-center space-x-4 mb-3">
                                   <div className="flex items-center">
-                                    <User className="h-3 w-3 mr-1 text-gray-400" />
+                                    <User className="h-3 w-3 mr-1 text-gray-600" />
                                     <span className="text-gray-400 text-sm">
-                                      {/* Hosted by: {property.users.first_name} */}
+                                      Host: {property.users?.first_name}
                                     </span>
                                   </div>
                                   <div className="flex items-center text-sm space-x-2 text-gray-400">
@@ -662,6 +630,7 @@ const ConsultantDash = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  onClick={() => handleProfileRoute(property.user_id)}
                                   className="border-white/20 text-sm"
                                 >
                                   <MessageCircle className="h-3 w-3 mr-1" /> Contact
@@ -727,10 +696,6 @@ const ConsultantDash = () => {
                                   <h3 className="font-semibold text-base">
                                     {property.title}
                                   </h3>
-                                  <div className="flex items-center">
-                                    <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                                    <span>Rating Here</span>
-                                  </div>
                                 </div>
         
                                 <p className="text-gray-400 text-sm flex items-center mb-1">
