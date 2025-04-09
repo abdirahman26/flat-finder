@@ -233,19 +233,23 @@ export const getUnresolvedComplaintsCount = async (): Promise<number> => {
 
 export const getAllListingsOrderedByStatus = async () => {
   const supabase = await createClient();
-     `
-        listing_id,
-        title,
-        city,
-        area_code,
-        is_verified,
-        reviewer,
-        users!listings_user_id_fkey (
-          email,
-          first_name
-        )
-      `
-    )
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select(`
+      listing_id,
+      title,
+      city,
+      area_code,
+      is_verified,
+      reviewer,
+      users!listings_user_id_fkey (
+        email,
+        first_name
+      )
+    `)
+    .order("is_verified", { ascending: true }); // Optional: order by status
+
   if (error) {
     console.error("Error fetching listings:", error);
     return [];
