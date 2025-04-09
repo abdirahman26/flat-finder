@@ -24,10 +24,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
-import { getAllListings, getUserDetails } from "@/app/(auth)/actions";
+import {
+  getAllListings,
+  getUserDetails,
+  getAllFavouritesByUserID,
+  removeFavourite,
+  addFavourite,
+} from "@/app/(auth)/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 
 interface PropertyListing {
   listing_id: string;
@@ -39,14 +44,14 @@ interface PropertyListing {
   area: string;
   bedrooms: number;
   bathrooms: number;
-  area_code: string
+  area_code: string;
   users: {
     first_name: string | null;
   } | null;
   listing_images: {
     url: string | null;
   } | null;
-};
+}
 
 interface UserData {
   first_name: string;
@@ -73,25 +78,31 @@ const ConsultantDash = () => {
   });
   const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
 
+  //array of listing_ids that are present in favourites for a given user_id
+  const [favouritedListingIds, setFavouritedListingIds] = useState<string[]>(
+    [],
+  );
+
   const router = useRouter();
 
-  // Handle watchlist toggle
-  const toggleWatchlist = (id: string) => {
-    setPropertiess(
-      propertiess.map((property) =>
-        property.listing_id === id
-          ? { ...property }
-          : property
-      )
-    );
+  // Toggles Favourite for a given listing_id
+  const toggleFavourite = async (id: string) => {
+    const isFavorited = favouritedListingIds.includes(id);
 
-    const property = propertiess.find((p) => p.listing_id === id);
-    if (property) {
-      if (!property.title) {
-        toast.success(`${property.title} added to your watchlist!`);
+    try {
+      if (isFavorited) {
+        await removeFavourite(id);
+        setFavouritedListingIds((prev) =>
+          prev.filter((listing_id) => listing_id !== id),
+        );
+        toast.success("Removed from favorites");
       } else {
-        toast.success(`${property.title} removed from your watchlist!`);
+        await addFavourite(id);
+        setFavouritedListingIds((prev) => [...prev, id]);
+        toast.success("Added to favorites");
       }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -100,7 +111,7 @@ const ConsultantDash = () => {
     const matchesSearch =
       listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       listing.description.toLowerCase().includes(searchQuery.toLowerCase());
-      // listing.location.toLowerCase().includes(searchQuery.toLowerCase());
+    // listing.location.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesPrice =
       listing.price >= priceFilter[0] && listing.price <= priceFilter[1];
@@ -113,7 +124,6 @@ const ConsultantDash = () => {
 
     const matchesFilter =
       selectedFilter === "All" ||
-
       (selectedFilter === "Apartments" &&
         listing.title.includes("Apartment")) ||
       (selectedFilter === "Houses" && listing.title.includes("Home")) ||
@@ -122,9 +132,19 @@ const ConsultantDash = () => {
         listing.title.includes("Beachfront")) ||
       (selectedFilter === "Downtown" && listing.title.includes("Downtown"));
 
-
-    return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter && matchesBathrooms;
+    return (
+      matchesSearch &&
+      matchesPrice &&
+      matchesBedrooms &&
+      matchesFilter &&
+      matchesBathrooms
+    );
   });
+
+  //The favourited properties (essentially goes through the array of favourited listingIDs and filters the propertiess array into a new array)
+  const favouritedProperties = propertiess.filter((property) =>
+    favouritedListingIds.includes(property.listing_id),
+  );
 
   const searchListings = async (query = "") => {
     try {
@@ -138,9 +158,7 @@ const ConsultantDash = () => {
         return;
       }
 
-      let supabaseQuery = supabase
-  .from("listings")
-  .select(`
+      let supabaseQuery = supabase.from("listings").select(`
     listing_id,
     user_id,
     title,
@@ -158,15 +176,17 @@ const ConsultantDash = () => {
       url
     )
   `);
-  
+
       if (query.trim() !== "") {
         const keyword = `%${query.trim()}%`;
         console.log("[searchListings] Called with query:", keyword);
-        supabaseQuery = supabaseQuery.or(`title.ilike."${keyword}",description.ilike."${keyword}",city.ilike."${keyword}"`);
+        supabaseQuery = supabaseQuery.or(
+          `title.ilike."${keyword}",description.ilike."${keyword}",city.ilike."${keyword}"`,
+        );
       }
-  
+
       const { data, error } = await supabaseQuery;
-  
+
       if (error) {
         console.error("Error fetching listings:", error.message);
         toast.error("Could not fetch listings.");
@@ -179,7 +199,6 @@ const ConsultantDash = () => {
       toast.error("An unexpected error occurred.");
     }
   };
-  
 
   const fetchListings = async () => {
     try {
@@ -200,7 +219,7 @@ const ConsultantDash = () => {
         toast.error("Failed to load listings.");
       } else if (listingData) {
         setPropertiess(
-          Array.isArray(listingData) ? listingData : [listingData]
+          Array.isArray(listingData) ? listingData : [listingData],
         );
       }
     } catch (err) {
@@ -247,6 +266,12 @@ const ConsultantDash = () => {
     }
   };
 
+  const fetchFavourites = async () => {
+    const { data, error } = await getAllFavouritesByUserID();
+    if (data) setFavouritedListingIds(data);
+    if (error) toast.error("Failed to load favorites");
+  };
+
   const handleProfileRoute = (userId: string) => {
     router.push(`profile/${userId}`);
   };
@@ -255,6 +280,7 @@ const ConsultantDash = () => {
     setMounted(true);
     fetchUserData();
     fetchListings();
+    fetchFavourites();
   }, []);
   return (
     <div
@@ -262,7 +288,6 @@ const ConsultantDash = () => {
         mounted ? "animate-fade-in" : "opacity-0"
       }`}
     >
-
       <div className="pt-16 px-4 md:px-6 max-w-7xl mx-auto">
         {/* Welcome Header */}
         <div className="mt-8 glass-card p-6 animate-slide-up">
@@ -344,14 +369,14 @@ const ConsultantDash = () => {
                       value={priceFilter}
                       onValueChange={(value) => {
                         const [newMin, newMax] = value;
-                        if (newMin >= priceFilter[1]) return
-                        if (newMax <= priceFilter[0]) return
+                        if (newMin >= priceFilter[1]) return;
+                        if (newMax <= priceFilter[0]) return;
 
-                        setPriceFilter(value as [number, number])
+                        setPriceFilter(value as [number, number]);
                       }}
                       min={0}
                       max={5000}
-                      step={50} 
+                      step={50}
                     />
                     <div className="flex justify-between text-sm text-gray-400">
                       <span>${priceFilter[0]}</span>
@@ -364,7 +389,7 @@ const ConsultantDash = () => {
                     Minimum Bedrooms
                   </label>
                   <div className="flex space-x-2">
-                    {[ 1, 2, 3, 4, "5+"].map((num) => (
+                    {[1, 2, 3, 4, "5+"].map((num) => (
                       <Button
                         key={num}
                         variant={
@@ -392,7 +417,7 @@ const ConsultantDash = () => {
                     Minimum Bathrooms
                   </label>
                   <div className="flex space-x-2">
-                    {[ 1, 2, 3, 4, "5+"].map((num) => (
+                    {[1, 2, 3, 4, "5+"].map((num) => (
                       <Button
                         key={num}
                         variant={
@@ -488,12 +513,14 @@ const ConsultantDash = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleWatchlist(listing.area_code)}
+                      onClick={() => toggleFavourite(listing.listing_id)}
                       className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                     >
                       <Heart
                         className={`h-5 w-5 ${
-                          true ? "fill-accent text-accent" : "text-white"
+                          favouritedListingIds.includes(listing.listing_id)
+                            ? "fill-accent text-accent"
+                            : "text-white"
                         }`}
                       />
                     </Button>
@@ -520,7 +547,7 @@ const ConsultantDash = () => {
                       </p>
                       <div className="flex items-center text-sm">
                         <User className="h-3 w-3 mr-1 text-gray-600" />
-                        <span className="text-gray-400"> 
+                        <span className="text-gray-400">
                           Host: {listing.users?.first_name}
                         </span>
                       </div>
@@ -552,179 +579,183 @@ const ConsultantDash = () => {
                 </Card>
               ))}
             </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {propertiess.map((property) => (
-                        <Card
-                          key={property.listing_id}
-                          className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
-                        >
-                          <div className="flex flex-col md:flex-row">
-                            <div className="md:w-1/3 h-48 md:h-auto relative">
-                              <img
-                                src={property.listing_images?.url ?? undefined}
-                                alt={property.title}
-                                className="w-full h-full object-cover"
-                              />
-                            <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => toggleWatchlist(property.listing_id)}
-                                  className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
-                                >
-                                  <Heart className="h-5 w-5 fill-accent text-accent" />
-                                </Button>
-                  
-                            </div>
-        
-                            <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
-                              <div>
-                                <div className="flex justify-between items-start mb-2">
-                                  <h3 className="font-semibold text-lg">
-                                    {property.title}
-                                  </h3>
-                                </div>
-        
-                                <p className="text-gray-400 text-sm flex items-center mb-2">
-                                  <MapPin className="h-3 w-3 mr-1" />{" "}
-                                  {property.area_code}{""}{property.area}
-                                </p>
-        
-                                <p className="text-sm text-gray-400 mb-3">
-                                  {property.description}
-                                </p>
-        
-                                <div className="flex items-center space-x-4 mb-3">
-                                  <div className="flex items-center">
-                                    <User className="h-3 w-3 mr-1 text-gray-600" />
-                                    <span className="text-gray-400 text-sm">
-                                      Host: {property.users?.first_name}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center text-sm space-x-2 text-gray-400">
-                                    <span>{property.bedrooms} bed</span>
-                                    <span>•</span>
-                                    <span>{property.bathrooms} bath</span>
-                                  </div>
-                                </div>
-        
-                                <p className="text-accent font-medium">
-                                  ${property.price}/month
-                                </p>
-                              </div>
-        
-                              <div className="mt-4 flex space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-white/20 text-sm"
-                                >
-                                  View Details
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="bg-accent text-dark hover:bg-accent/90 text-sm"
-                                >
-                                  <Calendar className="h-3 w-3 mr-1" /> Schedule
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleProfileRoute(property.user_id)}
-                                  className="border-white/20 text-sm"
-                                >
-                                  <MessageCircle className="h-3 w-3 mr-1" /> Contact
-                                  Host
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-        
-                {/* Watchlist Section */}
-                <div
-                  className="mt-8 mb-6 animate-slide-up"
-                  style={{ animationDelay: "0.4s" }}
+          ) : (
+            <div className="space-y-4">
+              {propertiess.map((property) => (
+                <Card
+                  key={property.listing_id}
+                  className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                 >
-                  <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
-                    <Heart className="mr-2 h-5 w-5" /> Your Watchlist (
-                    {propertiess.filter((p) => p).length})
-                  </h2>
-        
-                  {propertiess.filter((p) => p).length === 0 ? (
-                    <div className="glass-card p-8 text-center">
-                      <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                      <h3 className="text-xl font-medium mb-2">
-                        Your watchlist is empty
-                      </h3>
-                      <p className="text-gray-400 mb-4">
-                        Save properties you're interested in by clicking the heart icon.
-                      </p>
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-1/3 h-48 md:h-auto relative">
+                      <img
+                        src={property.listing_images?.url ?? undefined}
+                        alt={property.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleFavourite(property.listing_id)}
+                        className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
+                      >
+                        <Heart
+                          className={`h-5 w-5 ${
+                            favouritedListingIds.includes(property.listing_id)
+                              ? "fill-accent text-accent"
+                              : "text-white"
+                          }`}
+                        />
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="overflow-x-auto pb-4">
-                      <div className="flex gap-4 min-w-max">
-                        {propertiess
-                          .filter((p) => p)
-                          .map((property) => (
-                            <Card
-                              key={property.listing_id}
-                              className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
-                            >
-                              <div className="relative">
-                                <img
-                                  src={property.listing_images?.url ?? undefined}
-                                  alt={property.title}
-                                  className="w-full h-40 object-cover"
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => toggleWatchlist(property.listing_id)}
-                                  className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
-                                >
-                                  <Heart className="h-5 w-5 fill-accent text-accent" />
-                                </Button>
-                              </div>
-        
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h3 className="font-semibold text-base">
-                                    {property.title}
-                                  </h3>
-                                </div>
-        
-                                <p className="text-gray-400 text-sm flex items-center mb-1">
-                                  <MapPin className="h-3 w-3 mr-1" />{" "}
-                                  {property.area_code}
-                                </p>
-        
-                                <p className="text-accent font-medium">
-                                  ${property.price}/month
-                                </p>
-        
-                                <div className="mt-3 flex space-x-2">
-                                  <Button
-                                    size="sm"
-                                    className="bg-accent text-dark hover:bg-accent/90 text-sm flex-1"
-                                  >
-                                    <Calendar className="h-3 w-3 mr-1" /> Schedule
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
+
+                    <CardContent className="p-4 md:w-2/3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">
+                            {property.title}
+                          </h3>
+                        </div>
+
+                        <p className="text-gray-400 text-sm flex items-center mb-2">
+                          <MapPin className="h-3 w-3 mr-1" />{" "}
+                          {property.area_code}
+                          {""}
+                          {property.area}
+                        </p>
+
+                        <p className="text-sm text-gray-400 mb-3">
+                          {property.description}
+                        </p>
+
+                        <div className="flex items-center space-x-4 mb-3">
+                          <div className="flex items-center">
+                            <User className="h-3 w-3 mr-1 text-gray-600" />
+                            <span className="text-gray-400 text-sm">
+                              Host: {property.users?.first_name}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-sm space-x-2 text-gray-400">
+                            <span>{property.bedrooms} bed</span>
+                            <span>•</span>
+                            <span>{property.bathrooms} bath</span>
+                          </div>
+                        </div>
+
+                        <p className="text-accent font-medium">
+                          ${property.price}/month
+                        </p>
                       </div>
+
+                      <div className="mt-4 flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-white/20 text-sm"
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-accent text-dark hover:bg-accent/90 text-sm"
+                        >
+                          <Calendar className="h-3 w-3 mr-1" /> Schedule
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleProfileRoute(property.user_id)}
+                          className="border-white/20 text-sm"
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" /> Contact
+                          Host
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Watchlist Section */}
+        <div
+          className="mt-8 mb-6 animate-slide-up"
+          style={{ animationDelay: "0.4s" }}
+        >
+          <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
+            <Heart className="mr-2 h-5 w-5" /> Your Watchlist (
+            {favouritedProperties.length})
+          </h2>
+
+          {favouritedProperties.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-xl font-medium mb-2">
+                Your watchlist is empty
+              </h3>
+              <p className="text-gray-400 mb-4">
+                Save properties you're interested in by clicking the heart icon.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto pb-4">
+              <div className="flex gap-4 min-w-max">
+                {favouritedProperties.map((property) => (
+                  <Card
+                    key={property.listing_id}
+                    className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
+                  >
+                    <div className="relative">
+                      <img
+                        src={property.listing_images?.url ?? undefined}
+                        alt={property.title}
+                        className="w-full h-40 object-cover"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleFavourite(property.listing_id)}
+                        className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
+                      >
+                        <Heart className="h-5 w-5 fill-accent text-accent" />
+                      </Button>
                     </div>
-                  )}
-                </div>
+
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-base">
+                          {property.title}
+                        </h3>
+                      </div>
+
+                      <p className="text-gray-400 text-sm flex items-center mb-1">
+                        <MapPin className="h-3 w-3 mr-1" /> {property.area_code}
+                      </p>
+
+                      <p className="text-accent font-medium">
+                        ${property.price}/month
+                      </p>
+
+                      <div className="mt-3 flex space-x-2">
+                        <Button
+                          size="sm"
+                          className="bg-accent text-dark hover:bg-accent/90 text-sm flex-1"
+                        >
+                          <Calendar className="h-3 w-3 mr-1" /> Schedule
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
-          );
-        };
-        
-        export default ConsultantDash;
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ConsultantDash;

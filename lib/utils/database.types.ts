@@ -90,6 +90,65 @@ export type Database = {
           },
         ]
       }
+      favourites: {
+        Row: {
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favourites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["listing_id"]
+          },
+          {
+            foreignKeyName: "favourites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_availability: {
+        Row: {
+          available_from: string | null
+          available_to: string | null
+          id: string
+          listing_id: string
+        }
+        Insert: {
+          available_from?: string | null
+          available_to?: string | null
+          id?: string
+          listing_id: string
+        }
+        Update: {
+          available_from?: string | null
+          available_to?: string | null
+          id?: string
+          listing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_availability_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["listing_id"]
+          },
+        ]
+      }
       listing_images: {
         Row: {
           created_at: string

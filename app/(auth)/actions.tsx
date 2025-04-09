@@ -25,7 +25,7 @@ export const signUpFunc = async (
   password: string,
   id_number: number,
   first_name: string,
-  role: string
+  role: string,
 ): Promise<SignUpResponse> => {
   const supabase = await createClient();
 
@@ -147,7 +147,7 @@ export const addListing = async (
   created_at: string,
   description: string,
   price: number,
-  title: string
+  title: string,
 ) => {
   const supabase = await createClient();
 
@@ -227,7 +227,7 @@ export const getListingById = async (userId: string | string[] | undefined) => {
       listing_images(
         url
       )
-    `
+    `,
     )
     .eq("user_id", id);
 
@@ -255,7 +255,7 @@ export const getAllListings = async () => {
        listing_images(
         url
       )
-      `
+      `,
     );
 
     return { listingData: data ?? [], listingError: error ?? null };
@@ -356,7 +356,7 @@ export const getUserDetails = async () => {
   return { data: userData, error: null };
 };
 export const getUserDetailsById = async (
-  userId: string | string[] | undefined
+  userId: string | string[] | undefined,
 ) => {
   if (!userId) {
     return { data: null, error: new Error("No userId provided") };
@@ -377,4 +377,60 @@ export const getUserDetailsById = async (
   }
 
   return { data: userData, error: null };
+};
+
+// Favourite Stuff:
+//This should return an array of listing_ids that are present in favourites for a given user_id
+export const getAllFavouritesByUserID = async () => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { data: null, error: "Not authenticated" };
+
+  const { data, error } = await supabase
+    .from("favourites")
+    .select("listing_id")
+    .eq("user_id", user.id);
+
+  return {
+    data: data?.map((fav) => fav.listing_id) || [],
+    error,
+  };
+};
+
+// Adds a favourited listing
+export const addFavourite = async (listing_id: string) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { data: null, error: "Not authenticated" };
+
+  const { data, error } = await supabase
+    .from("favourites")
+    .insert([{ user_id: user.id, listing_id }])
+    .select();
+
+  return { data, error };
+};
+
+// Removes a favourited listing
+export const removeFavourite = async (listing_id: string) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { data: null, error: "Not authenticated" };
+
+  const { data, error } = await supabase
+    .from("favourites")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("listing_id", listing_id);
+
+  return { data, error };
 };
