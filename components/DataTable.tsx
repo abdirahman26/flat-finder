@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconX } from "@tabler/icons-react" 
+import { IconX } from "@tabler/icons-react"
 import {
   DndContext,
   KeyboardSensor,
@@ -97,6 +97,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "./ui/input"
 
 export const schema = z.object({
   id: z.number(),
@@ -106,6 +114,10 @@ export const schema = z.object({
   landlordName: z.string(),
   landlordEmail: z.string(),
   reviewer: z.string(),
+  isComplaint: z.boolean().optional().default(false),
+  complaintReason: z.string().optional(),
+  complaintStatus: z.enum(["Open", "Resolved"]).optional(),
+  reply: z.string().optional(),
 })
 
 // Create a separate component for the drag handle
@@ -128,165 +140,8 @@ function DragHandle({ id }: { id: number }) {
   )
 }
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-  },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          className = "border-custom-light"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "Listing Title",
-    header: "Listing Title",
-    cell: ({ row }) => {
-      return <TableCellViewer item={row.original} />
-    },
-    enableHiding: false,
-  },
-  {
-    accessorKey: "Address",
-    header: "Address",
-    cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="text-muted px-1.5">
-          {row.original.address}
-        </Badge>
-      </div>
-    ),
-  },
 
-  {
-    accessorKey: "Listing Status",
-    header: "Listing Status",
-    cell: ({ row }) => {
-      const status = row.original.listingStatus
-  
-      return (
-        <Badge variant="outline" className="text-muted px-1.5 gap-1 flex items-center">
-          {status === "Verified" ? (
-            <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400 size-4" />
-          ) : status === "Unverified" ? (
-            <IconX className="text-red-500 size-4" />
-          ) : (
-            <IconLoader className="animate-spin size-4 text-muted-foreground" />
-          )}
-          {status}
-        </Badge>
-      )
-    },
-  },
-  
-  {
-    accessorKey: "landlord Name",
-    header: "Landlord Name",
-    cell: ({ row }) => {
-      const name = row.original.landlordName
-      const displayName = name.length > 30 ? `${name.slice(0, 30)}...` : name
-  
-      return (
-        <div className="truncate text-sm text-muted">{displayName}</div>
-      )
-    },
-  },
-  
-  {
-    accessorKey: "landlord Email",
-    header: "Landlord Email",
-    cell: ({ row }) => {
-      const email = row.original.landlordEmail
-      const displayEmail = email.length > 30 ? `${email.slice(0, 30)}...` : email
-  
-      return (
-        <div className="truncate text-sm text-muted">{displayEmail}</div>
-      )
-    },
-  },
-  
- 
-  {
-    accessorKey: "reviewer",
-    header: "Reviewer",
-    cell: ({ row }) => {
-      const isAssigned = row.original.reviewer !== "Assign reviewer"
 
-      if (isAssigned) {
-        return row.original.reviewer
-      }
-
-      return (
-        <>
-          <Label htmlFor={`${row.original.id}-reviewer`} className="sr-only">
-            Reviewer
-          </Label>
-          <Select>
-            <SelectTrigger
-              className="w-38 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate data-[placeholder]:text-muted"
-              size="sm"
-              id={`${row.original.id}-reviewer`}
-            >
-              <SelectValue  placeholder="Assign reviewer" />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="Taher">Taher</SelectItem>
-              <SelectItem value="Hessa">Hessa</SelectItem>
-            </SelectContent>
-          </Select>
-        </>
-      )
-    },
-  },
-  {
-    id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-            size="icon"
-          >
-            <IconDotsVertical />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Verify</DropdownMenuItem>
-          <DropdownMenuItem>FDM Approved</DropdownMenuItem>
-          <DropdownMenuItem>Reject</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-]
 
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -298,7 +153,7 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
       data-state={row.getIsSelected() && "selected"}
       data-dragging={isDragging}
       ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected"
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected border-gray-700"
       style={{
         transform: CSS.Transform.toString(transform),
         transition: transition,
@@ -330,6 +185,13 @@ export function DataTable({
     pageIndex: 0,
     pageSize: 10,
   })
+
+  const [complaints, setComplaints] = React.useState([])
+  const [isListing, setIsListing] = React.useState(true)
+  const [replyId, setReplyId] = React.useState("")
+
+  const [openDialogId, setOpenDialogId] = React.useState<null | string>(null);
+
   const sortableId = React.useId()
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
@@ -341,6 +203,241 @@ export function DataTable({
     () => data?.map(({ id }) => id) || [],
     [data]
   )
+
+  const handleReply = (id: string) => {
+    setReplyId(id)
+    setOpenDialogId(id)
+  }
+
+  const columns: ColumnDef<z.infer<typeof schema>>[] = [
+    {
+      id: "drag",
+      header: () => null,
+      cell: ({ row }) => <DragHandle id={row.original.id} />,
+    },
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+            className="border-gray-500"
+
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="border-gray-500"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "Listing Title",
+      header: "Listing Title",
+      cell: ({ row }) => {
+        return <TableCellViewer item={row.original} />
+      },
+      enableHiding: false,
+    },
+    {
+      accessorKey: "Address",
+      header: "Address",
+      cell: ({ row }) => (
+        <div className="w-32">
+          <Badge variant="outline" className="text-muted px-1.5 border-gray-700">
+            {row.original.address}
+          </Badge>
+        </div>
+      ),
+    },
+
+    {
+      accessorKey: "Listing Status",
+      header: "Listing Status",
+      cell: ({ row }) => {
+        const status = row.original.listingStatus
+
+        return (
+          <Badge variant="outline" className="text-muted px-1.5 gap-1 flex items-center border-gray-700" style={{backgroundColor: status === "Verified" ? "rgba(11, 156, 49, 0.2)" : status === "Unverified" ? "rgba(255, 0, 0, 0.2)" : "rgba(115, 147, 179, 0.2)"}}>
+            {/* {status === "Verified" ? (
+              <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400 size-4" />
+            ) : status === "Unverified" ? (
+              <IconX className="text-red-500 size-4" />
+            ) : (
+              <IconLoader className="animate-spin size-4 text-muted-foreground" />
+            )} */}
+            {status}
+          </Badge>
+        )
+      },
+    },
+
+    {
+      accessorKey: "landlord Name",
+      header: "Landlord Name",
+      cell: ({ row }) => {
+        const name = row.original.landlordName
+        const displayName = name.length > 30 ? `${name.slice(0, 30)}...` : name
+
+        return (
+          <div className="truncate text-sm text-muted">{displayName}</div>
+        )
+      },
+    },
+
+    {
+      accessorKey: "landlord Email",
+      header: "Landlord Email",
+      cell: ({ row }) => {
+        const email = row.original.landlordEmail
+        const displayEmail = email.length > 30 ? `${email.slice(0, 30)}...` : email
+
+        return (
+          <div className="truncate text-sm text-muted">{displayEmail}</div>
+        )
+      },
+    },
+
+
+    {
+      accessorKey: "reviewer",
+      header: "Reviewer",
+      cell: ({ row }) => {
+        const isAssigned = row.original.reviewer !== "Assign reviewer"
+
+        if (isAssigned) {
+          return row.original.reviewer
+        }
+
+        return (
+          <>
+            <Label htmlFor={`${row.original.id}-reviewer`} className="sr-only">
+              Reviewer
+            </Label>
+            <Select>
+              <SelectTrigger
+                className="w-38 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate data-[placeholder]:text-muted border-gray-700 !bg-custom-dark"
+                size="sm"
+                id={`${row.original.id}-reviewer`}
+              >
+                <SelectValue placeholder="Assign reviewer" />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="Taher">Taher</SelectItem>
+                <SelectItem value="Hessa">Hessa</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        )
+      },
+    },
+    {
+      id: "actions",
+      cell: () => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+              size="icon"
+            >
+              <IconDotsVertical />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem>Verify</DropdownMenuItem>
+            <DropdownMenuItem>FDM Approved</DropdownMenuItem>
+            <DropdownMenuItem>Reject</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ]
+
+  type CompColumnData = {
+    id: string;
+    title: string;
+    status: string;
+    description: string;
+    complaint_id: string;
+  }
+  const compColumns: ColumnDef<CompColumnData>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+            className="border-gray-500"
+
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="border-gray-500"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "Title",
+      header: "Title",
+      cell: ({ row }) => row.original.title,
+    },
+    {
+      accessorKey: "Status",
+      header: "Status",
+      cell: ({ row }) => row.original.status,
+    },
+    {
+      accessorKey: "Description",
+      header: "Description",
+      cell: ({ row }) => row.original.description,
+    },
+    {
+      id: "Reply",
+      header: "Reply",
+      cell: ({ row }) => (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleReply(row.original.complaint_id)}
+        >
+          Reply
+        </Button>
+      ),
+    },
+  ];
+
+
 
   const table = useReactTable({
     data,
@@ -367,6 +464,19 @@ export function DataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
 
+  const complaintsTable = useReactTable({
+    data: complaints,
+    columns: compColumns,
+    state: {
+      rowSelection,
+    },
+    getRowId: (row) => row.id,
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (active && over && active.id !== over.id) {
@@ -376,6 +486,44 @@ export function DataTable({
         return arrayMove(data, oldIndex, newIndex)
       })
     }
+  }
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/FetchAllData');
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log(data);
+          setComplaints(data.complaints)
+
+        } else {
+          console.log("error");
+
+        }
+      } catch (err) {
+        console.log(err);
+
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleChange = (value: string) => {
+    console.log(value);
+    if (value === "complaints") {
+      setIsListing(false)
+      setData(complaints)
+    } else {
+      setIsListing(true)
+      setData(initialData)
+    }
+  }
+
+  const handleAddReply = () => {
+    console.log("Hello there! Replying to complait with the id of", replyId);
+
   }
 
   return (
@@ -387,18 +535,18 @@ export function DataTable({
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
-        <Select defaultValue="outline">
+        <Select defaultValue="listings" onValueChange={handleChange}>
           <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
+            className="flex w-fit @4xl/main:hidden !bg-custom-dark border-gray-700"
             size="sm"
             id="view-selector"
           >
             <SelectValue placeholder="Select a view" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="outline">Listings</SelectItem>
-            <SelectItem value="past-performance">Complaint</SelectItem>
-        
+            <SelectItem value="listings">Listings</SelectItem>
+            <SelectItem value="complaints">Complaints</SelectItem>
+
           </SelectContent>
         </Select>
         <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
@@ -414,7 +562,7 @@ export function DataTable({
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="!bg-custom-dark !border-gray-700 hover:text-gray-400">
                 <IconLayoutColumns />
                 <span className="hidden lg:inline">Customize Columns</span>
                 <span className="lg:hidden">Columns</span>
@@ -445,7 +593,7 @@ export function DataTable({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="!bg-custom-dark !border-gray-700 hover:text-gray-400">
             <IconPlus />
             <span className="hidden lg:inline">Add Section</span>
           </Button>
@@ -455,61 +603,108 @@ export function DataTable({
         value="outline"
         className="relative flex flex-col gap-4 overflow-auto "
       >
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
+        {!isListing ? (
+          // Complaints Table
+          <div className="overflow-hidden rounded-xl border border-gray-700 bg-custom-dark mb-2 text-white shadow-[0_4px_10px_rgba(0,0,0,0.4)]">
             <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      )
-                    })}
+              <TableHeader className="text-white sticky top-0 z-10">
+                {complaintsTable.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="hover:bg-transparent text-white relative border-gray-700">
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} colSpan={header.colSpan} className="text-white">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
+                {complaintsTable.getRowModel().rows?.length ? (
+                  complaintsTable.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected border-gray-700">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={columns.length}
+                      colSpan={compColumns.length}
                       className="h-24 text-center"
                     >
-                      No results.
+                      No complaints.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
-          </DndContext>
-        </div>
-        <div className="flex items-center justify-between">
+          </div>
+        ) : (
+          // Original Table with DnD
+          <div className="overflow-hidden rounded-xl border border-gray-700 bg-custom-dark mb-2 text-white shadow-[0_4px_10px_rgba(0,0,0,0.4)]">
+            <DndContext
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
+              onDragEnd={handleDragEnd}
+              sensors={sensors}
+              id={sortableId}
+            >
+              <Table>
+                <TableHeader className="text-white sticky top-0 z-10">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id} className="hover:bg-transparent text-white relative border-gray-700">
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id} colSpan={header.colSpan} className="text-white">
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody className="**:data-[slot=table-cell]:first:w-8">
+                  {table.getRowModel().rows?.length ? (
+                    <SortableContext
+                      items={dataIds}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {table.getRowModel().rows.map((row) => (
+                        <DraggableRow key={row.id} row={row} />
+                      ))}
+                    </SortableContext>
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </DndContext>
+          </div>
+        )}
+        <div className="flex items-center justify-between mt-4">
           <div className="text-muted hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+            {!isListing
+              ? `${complaintsTable.getFilteredSelectedRowModel().rows.length} of ${complaintsTable.getFilteredRowModel().rows.length} row(s) selected.`
+              : `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected.`
+            }
           </div>
           <div className="flex w-full items-center gap-8 lg:w-fit">
             <div className="hidden items-center gap-2 lg:flex">
@@ -517,14 +712,25 @@ export function DataTable({
                 Rows per page
               </Label>
               <Select
-                value={`${table.getState().pagination.pageSize}`}
+                value={`${!isListing
+                  ? complaintsTable.getState().pagination.pageSize
+                  : table.getState().pagination.pageSize}`
+                }
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value))
+                  const size = Number(value);
+                  if (!isListing) {
+                    complaintsTable.setPageSize(size);
+                  } else {
+                    table.setPageSize(size);
+                  }
                 }}
               >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
+                <SelectTrigger size="sm" className="w-20 !bg-custom-dark !border-gray-700" id="rows-per-page">
                   <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
+                    placeholder={!isListing
+                      ? complaintsTable.getState().pagination.pageSize
+                      : table.getState().pagination.pageSize
+                    }
                   />
                 </SelectTrigger>
                 <SelectContent side="top">
@@ -537,15 +743,30 @@ export function DataTable({
               </Select>
             </div>
             <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              Page {!isListing
+                ? complaintsTable.getState().pagination.pageIndex + 1
+                : table.getState().pagination.pageIndex + 1
+              } of{" "}
+              {!isListing
+                ? complaintsTable.getPageCount()
+                : table.getPageCount()
+              }
             </div>
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
               <Button
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => {
+                  if (!isListing) {
+                    complaintsTable.setPageIndex(0);
+                  } else {
+                    table.setPageIndex(0);
+                  }
+                }}
+                disabled={!isListing
+                  ? !complaintsTable.getCanPreviousPage()
+                  : !table.getCanPreviousPage()
+                }
               >
                 <span className="sr-only">Go to first page</span>
                 <IconChevronsLeft />
@@ -554,8 +775,17 @@ export function DataTable({
                 variant="outline"
                 className="size-8"
                 size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => {
+                  if (!isListing) {
+                    complaintsTable.previousPage();
+                  } else {
+                    table.previousPage();
+                  }
+                }}
+                disabled={!isListing
+                  ? !complaintsTable.getCanPreviousPage()
+                  : !table.getCanPreviousPage()
+                }
               >
                 <span className="sr-only">Go to previous page</span>
                 <IconChevronLeft />
@@ -564,8 +794,17 @@ export function DataTable({
                 variant="outline"
                 className="size-8"
                 size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() => {
+                  if (!isListing) {
+                    complaintsTable.nextPage();
+                  } else {
+                    table.nextPage();
+                  }
+                }}
+                disabled={!isListing
+                  ? !complaintsTable.getCanNextPage()
+                  : !table.getCanNextPage()
+                }
               >
                 <span className="sr-only">Go to next page</span>
                 <IconChevronRight />
@@ -574,8 +813,17 @@ export function DataTable({
                 variant="outline"
                 className="hidden size-8 lg:flex"
                 size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
+                onClick={() => {
+                  if (!isListing) {
+                    complaintsTable.setPageIndex(complaintsTable.getPageCount() - 1);
+                  } else {
+                    table.setPageIndex(table.getPageCount() - 1);
+                  }
+                }}
+                disabled={!isListing
+                  ? !complaintsTable.getCanNextPage()
+                  : !table.getCanNextPage()
+                }
               >
                 <span className="sr-only">Go to last page</span>
                 <IconChevronsRight />
@@ -599,6 +847,35 @@ export function DataTable({
       >
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
+      <Dialog
+        open={!!openDialogId}
+        onOpenChange={() => setOpenDialogId(null)}
+        modal
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reply to the complain</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="title" className="text-right">
+                Reply
+              </label>
+              <Input
+                id="title"
+                className="col-span-3"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="submit" onClick={() => setOpenDialogId(null)}>
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   )
 }
