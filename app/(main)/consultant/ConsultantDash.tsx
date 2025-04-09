@@ -24,7 +24,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
-import { getAllListings, getUserDetails } from "@/app/(auth)/actions";
+import {
+  getAllListings,
+  getUserDetails,
+  getAllFavouritesByUserID,
+  removeFavourite,
+  addFavourite,
+} from "@/app/(auth)/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -72,23 +78,32 @@ const ConsultantDash = () => {
   });
   const [propertiess, setPropertiess] = useState<PropertyListing[]>([]);
 
+  //array of listing_ids that are present in favourites for a given user_id
+  const [favouritedListingIds, setFavouritedListingIds] = useState<string[]>(
+    [],
+  );
+
   const router = useRouter();
 
-  // Handle watchlist toggle
-  const toggleWatchlist = (id: string) => {
-    setPropertiess(
-      propertiess.map((property) =>
-        property.listing_id === id ? { ...property } : property,
-      ),
-    );
 
-    const property = propertiess.find((p) => p.listing_id === id);
-    if (property) {
-      if (!property.title) {
-        toast.success(`${property.title} added to your watchlist!`);
+  // Toggles Favourite for a given listing_id
+  const toggleFavourite = async (id: string) => {
+    const isFavorited = favouritedListingIds.includes(id);
+    
+    try {
+      if (isFavorited) {
+        await removeFavourite(id);
+        setFavouritedListingIds((prev) =>
+          prev.filter((listing_id) => listing_id !== id),
+        );
+        toast.success("Removed from favorites");
       } else {
-        toast.success(`${property.title} removed from your watchlist!`);
+        await addFavourite(id);
+        setFavouritedListingIds((prev) => [...prev, id]);
+        toast.success("Added to favorites");
       }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -126,6 +141,11 @@ const ConsultantDash = () => {
       matchesBathrooms
     );
   });
+
+  //The favourited properties (essentially goes through the array of favourited listingIDs and filters the propertiess array into a new array)
+  const favouritedProperties = propertiess.filter((property) =>
+    favouritedListingIds.includes(property.listing_id),
+  );
 
   const searchListings = async (query = "") => {
     try {
@@ -247,6 +267,12 @@ const ConsultantDash = () => {
     }
   };
 
+  const fetchFavourites = async () => {
+    const { data, error } = await getAllFavouritesByUserID();
+    if (data) setFavouritedListingIds(data);
+    if (error) toast.error("Failed to load favorites");
+  };
+
   const handleProfileRoute = (userId: string) => {
     router.push(`profile/${userId}`);
   };
@@ -255,6 +281,7 @@ const ConsultantDash = () => {
     setMounted(true);
     fetchUserData();
     fetchListings();
+    fetchFavourites();
   }, []);
   return (
     <div
@@ -487,12 +514,14 @@ const ConsultantDash = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleWatchlist(listing.area_code)}
+                      onClick={() => toggleFavourite(listing.listing_id)}
                       className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                     >
                       <Heart
                         className={`h-5 w-5 ${
-                          true ? "fill-accent text-accent" : "text-white"
+                          favouritedListingIds.includes(listing.listing_id)
+                            ? "fill-accent text-accent"
+                            : "text-white"
                         }`}
                       />
                     </Button>
@@ -561,6 +590,7 @@ const ConsultantDash = () => {
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
+
                         src={listing.listing_images?.url ?? undefined}
                         alt={listing.title}
                         className="w-full h-full object-cover"
@@ -568,10 +598,16 @@ const ConsultantDash = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => toggleWatchlist(listing.listing_id)}
+                        onClick={() => toggleFavourite(listing.listing_id)}
                         className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                       >
-                        <Heart className="h-5 w-5 fill-accent text-accent" />
+                        <Heart
+                          className={`h-5 w-5 ${
+                            favouritedListingIds.includes(listing.listing_id)
+                              ? "fill-accent text-accent"
+                              : "text-white"
+                          }`}
+                        />
                       </Button>
                     </div>
 
@@ -652,10 +688,10 @@ const ConsultantDash = () => {
         >
           <h2 className="text-xl font-semibold mb-4 text-accent flex items-center">
             <Heart className="mr-2 h-5 w-5" /> Your Watchlist (
-            {propertiess.filter((p) => p).length})
+            {favouritedProperties.length})
           </h2>
 
-          {propertiess.filter((p) => p).length === 0 ? (
+          {favouritedProperties.length === 0 ? (
             <div className="glass-card p-8 text-center">
               <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <h3 className="text-xl font-medium mb-2">
@@ -668,56 +704,53 @@ const ConsultantDash = () => {
           ) : (
             <div className="overflow-x-auto pb-4">
               <div className="flex gap-4 min-w-max">
-                {propertiess
-                  .filter((p) => p)
-                  .map((property) => (
-                    <Card
-                      key={property.listing_id}
-                      className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
-                    >
-                      <div className="relative">
-                        <img
-                          src={property.listing_images?.url ?? undefined}
-                          alt={property.title}
-                          className="w-full h-40 object-cover"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleWatchlist(property.listing_id)}
-                          className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
-                        >
-                          <Heart className="h-5 w-5 fill-accent text-accent" />
-                        </Button>
+                {favouritedProperties.map((property) => (
+                  <Card
+                    key={property.listing_id}
+                    className="glass-card w-80 overflow-hidden hover:border-accent/50 transition-all duration-300"
+                  >
+                    <div className="relative">
+                      <img
+                        src={property.listing_images?.url ?? undefined}
+                        alt={property.title}
+                        className="w-full h-40 object-cover"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleFavourite(property.listing_id)}
+                        className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
+                      >
+                        <Heart className="h-5 w-5 fill-accent text-accent" />
+                      </Button>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-base">
+                          {property.title}
+                        </h3>
                       </div>
 
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-base">
-                            {property.title}
-                          </h3>
-                        </div>
+                      <p className="text-gray-400 text-sm flex items-center mb-1">
+                        <MapPin className="h-3 w-3 mr-1" /> {property.area_code}
+                      </p>
 
-                        <p className="text-gray-400 text-sm flex items-center mb-1">
-                          <MapPin className="h-3 w-3 mr-1" />{" "}
-                          {property.area_code}
-                        </p>
+                      <p className="text-accent font-medium">
+                        ${property.price}/month
+                      </p>
 
-                        <p className="text-accent font-medium">
-                          ${property.price}/month
-                        </p>
-
-                        <div className="mt-3 flex space-x-2">
-                          <Button
-                            size="sm"
-                            className="bg-accent text-dark hover:bg-accent/90 text-sm flex-1"
-                          >
-                            <Calendar className="h-3 w-3 mr-1" /> Schedule
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      <div className="mt-3 flex space-x-2">
+                        <Button
+                          size="sm"
+                          className="bg-accent text-dark hover:bg-accent/90 text-sm flex-1"
+                        >
+                          <Calendar className="h-3 w-3 mr-1" /> Schedule
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
