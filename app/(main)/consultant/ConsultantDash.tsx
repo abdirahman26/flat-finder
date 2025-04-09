@@ -113,6 +113,7 @@ const ConsultantDash = () => {
 
     const matchesFilter =
       selectedFilter === "All" ||
+
       (selectedFilter === "Apartments" &&
         listing.title.includes("Apartment")) ||
       (selectedFilter === "Houses" && listing.title.includes("Home")) ||
@@ -120,6 +121,7 @@ const ConsultantDash = () => {
       (selectedFilter === "Beachfront" &&
         listing.title.includes("Beachfront")) ||
       (selectedFilter === "Downtown" && listing.title.includes("Downtown"));
+
 
     return matchesSearch && matchesPrice && matchesBedrooms && matchesFilter && matchesBathrooms;
   });
