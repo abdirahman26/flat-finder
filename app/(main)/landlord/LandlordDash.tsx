@@ -195,10 +195,10 @@ const LandlordDash = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="w-full px-6 py-4 rounded-xl border-2 border-gray-600 bg-[rgba(57,63,36,0.1)] mb-5">
+      <div className="w-full px-6 py-4 rounded-xl border-[1px] border-gray-700 bg-custom-dark mb-5 shadow-[0_4px_10px_rgba(0,0,0,0.4)]">
         <h1 className="text-3xl font-bold text-accent">Landlord Dashboard</h1>
       </div>
-      <div className="flex items-center justify-between mb-8 px-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-4xl font-bold text-white">Manage Listings</h2>
           <p className="text-muted-foreground mt-1 font-medium">
@@ -339,15 +339,14 @@ const LandlordDash = () => {
       </div>
 
       {/* Property Listings Table */}
-      <div className="px-6">
-        <div className="overflow-hidden rounded-xl border border-gray-600 bg-custom-dark mb-8 text-white px-7 py-7 shadow-[0_4px_10px_rgba(0,0,0,0.4)]">
+        <div className="overflow-hidden rounded-xl border border-gray-700 bg-custom-dark mb-8 text-white px-6 py-6 shadow-[0_4px_10px_rgba(0,0,0,0.4)]">
           <h3 className="text-2xl text-white font-semibold flex items-center mb-8">
             <Building className="mr-2 h-5 w-5 text-accent" />
             Your Property Listings
           </h3>
           <Table>
             <TableHeader className="text-white">
-              <TableRow className="hover:bg-transparent text-white relative">
+              <TableRow className="hover:bg-transparent text-white relative border-gray-700">
                 <TableHead className="text-white">Title</TableHead>
                 <TableHead className="text-white">Location</TableHead>
                 <TableHead className="text-white">Price</TableHead>
@@ -368,7 +367,7 @@ const LandlordDash = () => {
                 </TableRow>
               ) : (
                 properties.map((property) => (
-                  <TableRow key={property.listing_id} className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected">
+                  <TableRow key={property.listing_id} className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-custom-gray-hover data-[state=selected]:bg-custom-gray-selected border-gray-700">
                     <TableCell className="font-medium">
                       {property.title}
                     </TableCell>
@@ -384,6 +383,7 @@ const LandlordDash = () => {
                           variant="outline"
                           size="icon"
                           onClick={() => handleViewProperty(property)}
+                          className="!border-gray-700 !bg-custom-dark"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -404,7 +404,6 @@ const LandlordDash = () => {
             </TableBody>
           </Table>
         </div>
-      </div>
 
       {/* Property Details Dialog */}
       <Dialog
