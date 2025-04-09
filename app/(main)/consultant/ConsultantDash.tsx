@@ -554,22 +554,22 @@ const ConsultantDash = () => {
             </div>
                   ) : (
                     <div className="space-y-4">
-                      {propertiess.map((property) => (
+                      {filteredProperties.map((listing) => (
                         <Card
-                          key={property.listing_id}
+                          key={listing.listing_id}
                           className="glass-card overflow-hidden hover:border-accent/50 transition-all duration-300"
                         >
                           <div className="flex flex-col md:flex-row">
                             <div className="md:w-1/3 h-48 md:h-auto relative">
                               <img
-                                src={property.listing_images?.url ?? undefined}
-                                alt={property.title}
+                                src={listing.listing_images?.url ?? undefined}
+                                alt={listing.title}
                                 className="w-full h-full object-cover"
                               />
                             <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => toggleWatchlist(property.listing_id)}
+                                  onClick={() => toggleWatchlist(listing.listing_id)}
                                   className="absolute top-2 right-2 bg-black/30 hover:bg-black/50 rounded-full"
                                 >
                                   <Heart className="h-5 w-5 fill-accent text-accent" />
@@ -581,35 +581,35 @@ const ConsultantDash = () => {
                               <div>
                                 <div className="flex justify-between items-start mb-2">
                                   <h3 className="font-semibold text-lg">
-                                    {property.title}
+                                    {listing.title}
                                   </h3>
                                 </div>
         
                                 <p className="text-gray-400 text-sm flex items-center mb-2">
                                   <MapPin className="h-3 w-3 mr-1" />{" "}
-                                  {property.area_code}{""}{property.area}
+                                  {listing.area_code}{""}{listing.area}
                                 </p>
         
                                 <p className="text-sm text-gray-400 mb-3">
-                                  {property.description}
+                                  {listing.description}
                                 </p>
         
                                 <div className="flex items-center space-x-4 mb-3">
                                   <div className="flex items-center">
                                     <User className="h-3 w-3 mr-1 text-gray-600" />
                                     <span className="text-gray-400 text-sm">
-                                      Host: {property.users?.first_name}
+                                      Host: {listing.users?.first_name}
                                     </span>
                                   </div>
                                   <div className="flex items-center text-sm space-x-2 text-gray-400">
-                                    <span>{property.bedrooms} bed</span>
+                                    <span>{listing.bedrooms} bed</span>
                                     <span>•</span>
-                                    <span>{property.bathrooms} bath</span>
+                                    <span>{listing.bathrooms} bath</span>
                                   </div>
                                 </div>
         
                                 <p className="text-accent font-medium">
-                                  ${property.price}/month
+                                  ${listing.price}/month
                                 </p>
                               </div>
         
@@ -630,7 +630,7 @@ const ConsultantDash = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleProfileRoute(property.user_id)}
+                                  onClick={() => handleProfileRoute(listing.user_id)}
                                   className="border-white/20 text-sm"
                                 >
                                   <MessageCircle className="h-3 w-3 mr-1" /> Contact
