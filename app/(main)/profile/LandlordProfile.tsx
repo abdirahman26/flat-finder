@@ -23,6 +23,9 @@ import { createClient } from "@/supabase/client";
 import { getListing, getUserDetails } from "@/app/(auth)/actions";
 import { toast } from "sonner";
 
+import UpdateAvailability from "@/components/UpdateAvailabiliity";
+
+
 interface PropertyListing {
   listing_id: string;
   title: string;
@@ -298,13 +301,7 @@ const LandlordProfile = () => {
                           >
                             View Details
                           </Button>
-                          <Button
-                            size="sm"
-                            className="bg-custom-lime text-dark hover:bg-custom-lime/90 text-sm"
-                          >
-                            <Calendar className="h-3 w-3 mr-1" /> Check
-                            Availability
-                          </Button>
+                          <UpdateAvailability listingId={listing.listing_id}/>
                         </div>
                       </CardContent>
                     </div>

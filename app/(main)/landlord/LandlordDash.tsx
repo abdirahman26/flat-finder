@@ -43,7 +43,23 @@ import {
   addListingImage,
   getListing,
   removeListing,
+  addListingAvailability,
 } from "@/app/(auth)/actions";
+
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { DatePickerWithRange } from "@/components/DateRangePicker";
 
 // Define the PropertyListing type
 interface PropertyListing {
@@ -160,6 +176,12 @@ const LandlordDash = () => {
   };
 
   const handleAddProperty = async () => {
+
+    if (availability.length === 0) {
+      toast.error("Please add at least one availability range before adding the listing.");
+      return;
+    }
+
     const createdAt = new Date().toISOString();
     const propertyToAdd = {
       created_at: createdAt,
@@ -184,6 +206,23 @@ const LandlordDash = () => {
         console.error("Error adding listing:", error ?? "Unknown error");
         console.log(error);
         return;
+      }
+
+      if (addedListing?.listing_id && availability.length > 0) {
+        const availabilityPayload = availability.map((range) => ({
+          available_from: range.from?.toISOString() ?? "",
+          available_to: range.to?.toISOString() ?? "",
+        }));
+      
+        const { error: availError } = await addListingAvailability(
+          addedListing.listing_id,
+          availabilityPayload
+        );
+      
+        if (availError) {
+          toast.error("Failed to save availability.");
+          console.error("Availability error:", availError);
+        }
       }
 
       if (previewUrl && addedListing?.listing_id) {
@@ -248,8 +287,61 @@ const LandlordDash = () => {
     setViewingProperty(property);
   };
 
+  const [availability, setAvailability] = useState<DateRange[]>([]);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+
+  const handleRemoveAvailability = (index: number) => {
+    setAvailability((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // receive dates from picker
+  const handleAddAvailability = (range: DateRange | undefined) => {
+    if (!range?.from || !range?.to) return;
+
+    // output all dates selected so for teh array
+    const allDates = availability.map((a) => ({
+      from: a.from,
+      to: a.to,
+    }));
+
+    let overlap = false;
+
+    for (const a of availability) {
+      if (range.from && range.to && a.from && a.to) {
+        const isOverlap = range.from <= a.to && range.to >= a.from;
+        console.log("Checking overlap with:", a.from, "-", a.to, "→", isOverlap);
+        if (isOverlap) {
+          overlap = true;
+          break;
+        }
+      }
+    }
+
+    if (overlap) {
+      console.log("overlap", overlap);
+      setShowErrorDialog(true);
+      return;
+    }
+
+    setAvailability((prev) => [...prev, range]);
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
+      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Something went wrong</AlertDialogTitle>
+              <AlertDialogDescription>
+                This availability range overlaps with an existing one. Please select a different date.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowErrorDialog(false)}>Close</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Landlord Dashboard</h1>
@@ -346,6 +438,53 @@ const LandlordDash = () => {
                   className="col-span-3"
                 />
               </div>
+
+               {/* Select availability */}
+               <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="date" className="text-right">
+                  Availability
+                </label>
+                <DatePickerWithRange className="col-span-3" onAdd={handleAddAvailability} />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="col-span-4 col-start-2">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>From</TableHead>
+                        <TableHead>To</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {availability.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center text-muted-foreground">
+                            No availability added.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        availability.map((range, i) => (
+                          <TableRow key={i}>
+                           <TableCell>
+                            {range.from ? format(range.from, "LLL dd, y") : "—"}
+                          </TableCell>
+                            <TableCell>{range.to ? format(range.to, "LLL dd, y") : "-"}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button variant="destructive" size="icon" onClick={() => handleRemoveAvailability(i)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div> 
+              </div>          
 
               <div className="grid grid-cols-4 items-center gap-4">
                 <label htmlFor="price" className="text-right">
