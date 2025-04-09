@@ -1,6 +1,6 @@
 "use client";
 
-import { pageRouting } from "@/app/(auth)/actions";
+import { navRouting } from "@/app/(auth)/actions";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -29,7 +29,7 @@ const Nav = () => {
     }
 
     if (link === "/dashboard") {
-      const { error, role } = await pageRouting();
+      const { error, role } = await navRouting();
 
       if (error) {
         console.log(error);

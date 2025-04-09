@@ -90,6 +90,7 @@ export type Database = {
           },
         ]
       }
+
       favourites: {
         Row: {
           listing_id: string
@@ -120,6 +121,7 @@ export type Database = {
           },
         ]
       }
+
       listing_images: {
         Row: {
           created_at: string

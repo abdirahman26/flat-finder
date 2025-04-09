@@ -1,12 +1,22 @@
-"use client";
-
+import { navRouting } from "@/app/(auth)/actions";
 import ConsultantProfile from "./ConsultantProfile";
 import LandlordProfile from "./LandlordProfile";
 
-const Profile = () => {
-  const isLandlord = true;
+const Profile = async () => {
+  const { role, error } = await navRouting();
 
-  return <>{isLandlord ? <LandlordProfile /> : <ConsultantProfile />}</>;
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  if (role === "landlord") {
+    return <LandlordProfile />;
+  } else if (role === "consultant") {
+    return <ConsultantProfile />;
+  }
+
+  return;
 };
 
 export default Profile;

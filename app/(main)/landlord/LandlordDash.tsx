@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,68 +26,93 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Building, Trash2, Eye, Edit, Home } from "lucide-react";
+import {
+  Plus,
+  Building,
+  Trash2,
+  Eye,
+  Edit,
+  Home,
+  ImageIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
 import { useRouter } from "next/navigation";
+import {
+  addListing,
+  addListingImage,
+  getListing,
+  removeListing,
+} from "@/app/(auth)/actions";
 
 // Define the PropertyListing type
 interface PropertyListing {
-  id: string;
+  listing_id: string;
   title: string;
   description: string;
   price: number;
-  location: string;
+  city: string;
+  area: string;
   bedrooms: number;
   bathrooms: number;
-  imageUrl: string;
+  area_code: string;
 }
 
 const LandlordDash = () => {
-  // implement sign out
-  const supabase = createClient();
-  const router = useRouter();
-
   // Sample initial data for properties
-  const [properties, setProperties] = useState<PropertyListing[]>([
-    {
-      id: "1",
-      title: "Modern Downtown Apartment",
-      description:
-        "Stylish apartment in the heart of downtown with amazing city views and amenities.",
-      price: 1800,
-      location: "123 Main St, Downtown",
-      bedrooms: 2,
-      bathrooms: 2,
-      imageUrl: "/placeholder.svg",
-    },
-    {
-      id: "2",
-      title: "Cozy Suburban Home",
-      description:
-        "Family-friendly home with a spacious backyard in a quiet neighborhood.",
-      price: 2200,
-      location: "456 Oak Ave, Suburbia",
-      bedrooms: 3,
-      bathrooms: 2,
-      imageUrl: "/placeholder.svg",
-    },
-  ]);
+  const [properties, setProperties] = useState<PropertyListing[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // New property form state
-  const [newProperty, setNewProperty] = useState<Omit<PropertyListing, "id">>({
+  const [newProperty, setNewProperty] = useState<
+    Omit<PropertyListing, "listing_id">
+  >({
     title: "",
     description: "",
     price: 0,
-    location: "",
+    city: "",
+    area: "",
     bedrooms: 1,
     bathrooms: 1,
-    imageUrl: "/placeholder.svg",
+    area_code: "",
   });
 
   // Property view state
-  const [viewingProperty, setViewingProperty] =
-    useState<PropertyListing | null>(null);
+  const [viewingProperty, setViewingProperty] = useState<Omit<
+    PropertyListing,
+    "listing_id"
+  > | null>(null);
+
+  const fetchListings = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const landlordId = authData.user.id;
+      const { listingData, listingError } = await getListing(landlordId);
+
+      if (listingError) {
+        console.error("Error fetching listings:", listingError);
+        toast.error("Failed to load listings.");
+      } else if (listingData) {
+        setProperties(Array.isArray(listingData) ? listingData : [listingData]); // Handle single or multiple results
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching listings:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
 
   // Handle input changes for new property form
   const handleInputChange = (
@@ -103,34 +128,119 @@ const LandlordDash = () => {
     });
   };
 
-  // Add a new property
-  const handleAddProperty = () => {
-    const newId = Date.now().toString();
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const supabase = createClient();
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `public/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("listing-images")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Image upload error:", uploadError);
+      toast.error("Failed to upload image.");
+      return;
+    }
+
+    const publicUrl = supabase.storage
+      .from("listing-images")
+      .getPublicUrl(filePath).data.publicUrl;
+    setPreviewUrl(publicUrl);
+
+    toast.success("Image uploaded successfully!");
+  };
+
+  const handleAddProperty = async () => {
+    const createdAt = new Date().toISOString();
     const propertyToAdd = {
-      id: newId,
+      created_at: createdAt,
       ...newProperty,
     };
 
-    setProperties([...properties, propertyToAdd]);
+    try {
+      const { data: addedListing, error } = await addListing(
+        propertyToAdd.area,
+        propertyToAdd.area_code,
+        propertyToAdd.bathrooms,
+        propertyToAdd.bedrooms,
+        propertyToAdd.city,
+        propertyToAdd.created_at,
+        propertyToAdd.description,
+        propertyToAdd.price,
+        propertyToAdd.title
+      );
 
-    // Reset form
-    setNewProperty({
-      title: "",
-      description: "",
-      price: 0,
-      location: "",
-      bedrooms: 1,
-      bathrooms: 1,
-      imageUrl: "/placeholder.svg",
-    });
+      if (error) {
+        toast.error("Failed to add listing. Please try again.");
+        console.error("Error adding listing:", error ?? "Unknown error");
+        console.log(error);
+        return;
+      }
 
-    toast.success("Property listing added successfully!");
+      if (previewUrl && addedListing?.listing_id) {
+        const { error: imageError } = await addListingImage(
+          addedListing?.listing_id,
+          previewUrl
+        );
+        if (imageError) {
+          console.error("Error adding listing image:", imageError);
+          toast.error("Failed to save listing image.");
+        }
+      }
+      //@ts-ignore
+      setProperties([...properties, addedListing]);
+
+      // Reset form
+      setNewProperty({
+        title: "",
+        description: "",
+        price: 0,
+        city: "",
+        area: "",
+        bedrooms: 1,
+        bathrooms: 1,
+        area_code: "",
+      });
+
+      setPreviewUrl(null);
+
+      toast.success("Property listing added successfully!");
+    } catch (err) {
+      console.error("Unexpected error adding listing:", err);
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   // Remove a property
-  const handleRemoveProperty = (id: string) => {
-    setProperties(properties.filter((property) => property.id !== id));
-    toast.success("Property listing removed successfully!");
+  const handleRemoveProperty = async (id: string) => {
+    try {
+      const { listingError } = await removeListing(id);
+
+      if (listingError) {
+        toast.error("Failed to remove listing from database.");
+        console.error("Error removing listing:", listingError);
+        return;
+      }
+
+      // Remove from UI state after successful deletion
+      setProperties((prevProperties) =>
+        prevProperties.filter((property) => property.listing_id !== id)
+      );
+
+      toast.success("Property listing removed successfully!");
+    } catch (err) {
+      console.error("Unexpected error removing listing:", err);
+      toast.error("An unexpected error occurred.");
+    }
   };
 
   // View property details
@@ -176,6 +286,54 @@ const LandlordDash = () => {
                 />
               </div>
 
+              {/* Image Upload Field */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <label htmlFor="image" className="text-right pt-2">
+                  Image
+                </label>
+                <div className="col-span-3">
+                  <label
+                    htmlFor="image"
+                    className="flex flex-col items-center justify-center w-full border border-input border-dashed rounded-md bg-background px-4 py-6 text-sm text-muted-foreground cursor-pointer hover:bg-gray-100 transition"
+                  >
+                    <ImageIcon className="mb-2 h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      Click to upload or drag and drop
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG, GIF up to 5MB
+                    </span>
+                    <input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {previewUrl && (
+                    <div className="relative mt-3 h-20 w-20 rounded-xl overflow-hidden border border-muted shadow">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="h-full w-full object-cover"
+                      />
+
+                      {/* ✖ Close Button on top-right of the image */}
+                      <button
+                        onClick={() => setPreviewUrl(null)}
+                        className="absolute top-1 right-1 bg-white text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-gray-200 transition"
+                        aria-label="Remove image"
+                        style={{ zIndex: 10 }}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <label htmlFor="description" className="text-right">
                   Description
@@ -204,13 +362,39 @@ const LandlordDash = () => {
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="location" className="text-right">
-                  Location
+                <label htmlFor="city" className="text-right">
+                  City
                 </label>
                 <Input
-                  id="location"
-                  name="location"
-                  value={newProperty.location}
+                  id="city"
+                  name="city"
+                  value={newProperty.city}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="area" className="text-right">
+                  Area
+                </label>
+                <Input
+                  id="area"
+                  name="area"
+                  value={newProperty.area}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="area_code" className="text-right">
+                  Zip-Code
+                </label>
+                <Input
+                  id="area_code"
+                  name="area_code"
+                  value={newProperty.area_code}
                   onChange={handleInputChange}
                   className="col-span-3"
                 />
@@ -286,11 +470,13 @@ const LandlordDash = () => {
                 </TableRow>
               ) : (
                 properties.map((property) => (
-                  <TableRow key={property.id}>
+                  <TableRow key={property.listing_id}>
                     <TableCell className="font-medium">
                       {property.title}
                     </TableCell>
-                    <TableCell>{property.location}</TableCell>
+                    <TableCell>
+                      {property.area}, {property.city}
+                    </TableCell>
                     <TableCell>${property.price}/month</TableCell>
                     <TableCell>{property.bedrooms}</TableCell>
                     <TableCell>{property.bathrooms}</TableCell>
@@ -306,7 +492,9 @@ const LandlordDash = () => {
                         <Button
                           variant="destructive"
                           size="icon"
-                          onClick={() => handleRemoveProperty(property.id)}
+                          onClick={() =>
+                            handleRemoveProperty(property.listing_id)
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -331,19 +519,11 @@ const LandlordDash = () => {
               <DialogHeader>
                 <DialogTitle>{viewingProperty.title}</DialogTitle>
                 <DialogDescription>
-                  {viewingProperty.location}
+                  {viewingProperty.city}, {viewingProperty.area}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="grid gap-4 py-4">
-                <div className="aspect-video w-full bg-muted rounded-md overflow-hidden">
-                  <img
-                    src={viewingProperty.imageUrl}
-                    alt={viewingProperty.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="flex flex-col items-center justify-center p-2 border rounded-md">
                     <span className="text-muted-foreground">Price</span>

@@ -108,10 +108,9 @@ export const signOutFunc = async () => {
   return { error };
 };
 
-export const pageRouting = async () => {
+export const navRouting = async () => {
   const supabase = await createClient();
 
-  // Step 1: Authenticate the user with Supabase
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
   if (authError) {
@@ -140,7 +139,6 @@ export const pageRouting = async () => {
   // If authentication fails, return null for the data and role
   return { data: null, error: new Error("User not found"), role: null };
 };
-
 
 export const getPendingListingsCount = async (): Promise<number> => {
   const supabase = await createClient();
@@ -235,11 +233,7 @@ export const getUnresolvedComplaintsCount = async (): Promise<number> => {
 
 export const getAllListingsOrderedByStatus = async () => {
   const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("listings")
-    .select(
-   `
+     `
         listing_id,
         title,
         city,
@@ -438,4 +432,246 @@ export const sendComplaintMessage = async ({
   }
 
   return true;
+};
+=======
+export const addListing = async (
+  area: string,
+  area_code: string,
+  bathrooms: number,
+  bedrooms: number,
+  city: string,
+  created_at: string,
+  description: string,
+  price: number,
+  title: string
+) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error("Error fetching user:", error);
+    return { data: null, error };
+  }
+
+  if (data?.user) {
+    const { data: insertData, error: insertError } = await supabase
+      .from("listings")
+      .insert([
+        {
+          area,
+          area_code,
+          bathrooms,
+          bedrooms,
+          city,
+          created_at,
+          description,
+          user_id: data.user.id,
+          price,
+          title,
+        },
+      ])
+      .select();
+
+    if (insertError) {
+      console.error("Error inserting listing:", insertError);
+      return { data: null, error: insertError };
+    }
+
+    return { data: insertData ? insertData[0] : null, error: null };
+  }
+
+  return { data: null, error: "No authenticated user found" };
+};
+
+export const getListing = async (listing_id: string) => {
+  const supabase = await createClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError) {
+    return { listingData: null, listingError: authError };
+  }
+
+  if (authData?.user) {
+    const { data, error } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("user_id", listing_id);
+
+    return { listingData: data ?? [], listingError: error ?? null };
+  }
+
+  return {
+    listingData: null,
+    listingError: new Error("User not authenticated"),
+  };
+};
+
+export const getListingById = async (userId: string | string[] | undefined) => {
+  if (!userId) {
+    return { data: null, error: new Error("No userId provided") };
+  }
+  const supabase = await createClient();
+
+  const id = Array.isArray(userId) ? userId[0] : userId;
+
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select(
+      `
+      *,
+      listing_images(
+        url
+      )
+    `
+    )
+    .eq("user_id", id);
+
+  return {
+    listingData: data ?? [],
+    listingError: error ?? null,
+  };
+};
+
+export const getAllListings = async () => {
+  const supabase = await createClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError) {
+    return { listingData: null, listingError: authError };
+  }
+
+  if (authData?.user) {
+    const { data, error } = await supabase.from("listings").select(
+      `
+       *,
+       users!listings_user_id_fkey(
+        first_name
+       ),
+       listing_images(
+        url
+      )
+      `
+    );
+
+    return { listingData: data ?? [], listingError: error ?? null };
+  }
+
+  return {
+    listingData: null,
+    listingError: new Error("User not authenticated"),
+  };
+};
+
+export const removeListing = async (listing_id: string) => {
+  const supabase = await createClient();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError) {
+    return { listingData: null, listingError: authError };
+  }
+
+  if (authData?.user) {
+    const { data, error } = await supabase
+      .from("listings")
+      .delete()
+      .eq("listing_id", listing_id);
+
+    return { listingData: data ?? [], listingError: error ?? null };
+  }
+
+  return {
+    listingData: null,
+    listingError: new Error("User not authenticated"),
+  };
+};
+
+export const addListingImage = async (listing_id: string, url: string) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("listing_images").insert([
+    {
+      listing_id,
+      url,
+    },
+  ]);
+
+  return { error };
+};
+
+export const fetchImage = async () => {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.from("listing_images").select("*");
+
+    if (error) {
+      throw error;
+    }
+
+    return data; // Return the data fetched from the "listing_images" table
+  } catch (error) {
+    console.error("Error fetching images:", error);
+    throw new Error("Failed to fetch images");
+  }
+};
+
+export const updateListing = async () => {};
+
+// export const getUser = async () => {
+//   const supabase = await createClient();
+//   const { data, error } = await supabase.auth.getUser();
+
+//   if (error) {
+//     console.error("Error fetching user:", error);
+//   }
+
+//   return { data, error };
+// };
+
+export const getUserDetails = async () => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    console.error("Error fetching auth user:", error);
+    return { data: null, error };
+  }
+
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", data.user.id)
+    .single();
+
+  if (userError) {
+    console.error("Error fetching user details:", userError);
+    return { data: null, error: userError };
+  }
+
+  return { data: userData, error: null };
+};
+export const getUserDetailsById = async (
+  userId: string | string[] | undefined
+) => {
+  if (!userId) {
+    return { data: null, error: new Error("No userId provided") };
+  }
+
+  const id = Array.isArray(userId) ? userId[0] : userId;
+
+  const supabase = await createClient();
+  const { data: userData, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching user details:", error);
+    return { data: null, error };
+  }
+
+  return { data: userData, error: null };
 };
