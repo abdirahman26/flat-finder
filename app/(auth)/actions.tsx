@@ -679,8 +679,71 @@ export const getUserDetailsById = async (
 
   return { data: userData, error: null };
 };
-// Favourite Stuff:
-//This should return an array of listing_ids that are present in favourites for a given user_id
+
+
+export const addListingAvailability = async (
+  listingId: string,
+  availability: { available_from: string; available_to: string }[]
+) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("listing_availability").insert(
+    availability.map((a) => ({
+      listing_id: listingId,
+      available_from: a.available_from,
+      available_to: a.available_to,
+    }))
+  );
+
+  return { error };
+};
+
+export const getListingAvailability = async (listingId: string) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("listing_availability")
+    .select("available_from, available_to")
+    .eq("listing_id", listingId);
+
+  if (error) {
+    console.error("Error fetching listing availability:", error);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+};
+
+export const updateListingAvailability = async (
+  listingId: string,
+  newAvailability: { available_from: string; available_to: string }[]
+) => {
+  const supabase = await createClient();
+
+  // 1. Delete old entries
+  const { error: deleteError } = await supabase
+    .from("listing_availability")
+    .delete()
+    .eq("listing_id", listingId);
+
+  if (deleteError) {
+    return { error: deleteError };
+  }
+
+  // 2. Insert new entries
+  const { error: insertError } = await supabase
+    .from("listing_availability")
+    .insert(
+      newAvailability.map((range) => ({
+        listing_id: listingId,
+        available_from: range.available_from,
+        available_to: range.available_to,
+      }))
+    );
+
+  return { error: insertError || null };
+};
+
 export const getAllFavouritesByUserID = async () => {
   const supabase = await createClient();
   const {
@@ -734,3 +797,4 @@ export const removeFavourite = async (listing_id: string) => {
 
   return { data, error };
 };
+
