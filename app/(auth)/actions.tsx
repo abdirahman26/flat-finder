@@ -796,3 +796,26 @@ export const removeFavourite = async (listing_id: string) => {
 
   return { data, error };
 };
+
+export const addBooking = async (
+  listing_id: string,
+  user_id: string,
+  booking_from: string,
+  booking_to: string
+) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("booking")
+    .insert([
+      {
+        listing_id,
+        user_id: user_id,
+        booking_from,
+        booking_to,
+      },
+    ])
+    .select();
+
+  return { data, error };
+};
