@@ -33,6 +33,7 @@ const SignUp = () => {
       email: "",
       password: "",
       role: "" as unknown as "Consultant" | "Landlord",
+      mobile_number: "" as unknown as number,
     },
   });
 
@@ -45,9 +46,16 @@ const SignUp = () => {
   const onSubmit: SubmitHandler<SignUpFormData> = async (
     data: SignUpFormData
   ) => {
-    const { name, idNumber, email, password, role } = data;
+    const { name, idNumber, email, password, role, mobile_number } = data;
 
-    const { error } = await signUpFunc(email, password, idNumber, name, role);
+    const { error } = await signUpFunc(
+      email,
+      password,
+      idNumber,
+      name,
+      role,
+      mobile_number
+    );
 
     if (error) {
       console.log(error);
@@ -123,6 +131,23 @@ const SignUp = () => {
                 </FormItem>
               )}
             />
+
+            <FormField
+              name="mobile_number"
+              render={() => (
+                <FormItem>
+                  <FormControl>
+                    <StyledInput
+                      {...register("mobile_number")}
+                      placeholder="Mobile Number"
+                      type="string"
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.mobile_number?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
+
             <FormField
               name="email"
               render={() => (

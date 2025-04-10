@@ -17,9 +17,11 @@ import {
   Building,
   MapPin,
   Calendar,
+  Phone,
 } from "lucide-react";
 import { createClient } from "@/supabase/client";
 import { toast } from "sonner";
+import { IconDeviceMobilePause } from "@tabler/icons-react";
 
 interface OtherUserData {
   created_at: string;
@@ -29,6 +31,7 @@ interface OtherUserData {
   id_number: number;
   is_verified: boolean;
   role: string;
+  mobile_number: number | null;
 }
 
 interface PropertyListing {
@@ -178,6 +181,13 @@ function Page() {
                   <IdCard className="h-5 w-5 text-custom-lime mr-2" />
                   <p className="text-sm text-gray-300">
                     {otherUserData.id_number}
+                  </p>
+                </div>
+
+                <div className="flex items-start">
+                  <Phone className="h-5 w-5 text-custom-lime mr-2" />
+                  <p className="text-sm text-gray-300">
+                    {otherUserData.mobile_number}
                   </p>
                 </div>
               </div>

@@ -25,7 +25,6 @@ import { toast } from "sonner";
 
 import UpdateAvailability from "@/components/UpdateAvailabiliity";
 
-
 interface PropertyListing {
   listing_id: string;
   title: string;
@@ -44,6 +43,7 @@ interface UserData {
   created_at: string;
   email: string;
   id_number: number;
+  mobile_number?: number | null;
 }
 
 const LandlordProfile = () => {
@@ -301,7 +301,7 @@ const LandlordProfile = () => {
                           >
                             View Details
                           </Button>
-                          <UpdateAvailability listingId={listing.listing_id}/>
+                          <UpdateAvailability listingId={listing.listing_id} />
                         </div>
                       </CardContent>
                     </div>

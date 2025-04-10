@@ -246,6 +246,7 @@ export type Database = {
           id: string
           id_number: number
           is_verified: boolean
+          mobile_number: number | null
           role: string
         }
         Insert: {
@@ -255,6 +256,7 @@ export type Database = {
           id?: string
           id_number: number
           is_verified?: boolean
+          mobile_number?: number | null
           role: string
         }
         Update: {
@@ -264,6 +266,7 @@ export type Database = {
           id?: string
           id_number?: number
           is_verified?: boolean
+          mobile_number?: number | null
           role?: string
         }
         Relationships: []

@@ -80,21 +80,20 @@ const ConsultantDash = () => {
 
   //array of listing_ids that are present in favourites for a given user_id
   const [favouritedListingIds, setFavouritedListingIds] = useState<string[]>(
-    [],
+    []
   );
 
   const router = useRouter();
 
-
   // Toggles Favourite for a given listing_id
   const toggleFavourite = async (id: string) => {
     const isFavorited = favouritedListingIds.includes(id);
-    
+
     try {
       if (isFavorited) {
         await removeFavourite(id);
         setFavouritedListingIds((prev) =>
-          prev.filter((listing_id) => listing_id !== id),
+          prev.filter((listing_id) => listing_id !== id)
         );
         toast.success("Removed from favorites");
       } else {
@@ -144,7 +143,7 @@ const ConsultantDash = () => {
 
   //The favourited properties (essentially goes through the array of favourited listingIDs and filters the propertiess array into a new array)
   const favouritedProperties = propertiess.filter((property) =>
-    favouritedListingIds.includes(property.listing_id),
+    favouritedListingIds.includes(property.listing_id)
   );
 
   const searchListings = async (query = "") => {
@@ -182,7 +181,7 @@ const ConsultantDash = () => {
         const keyword = `%${query.trim()}%`;
         console.log("[searchListings] Called with query:", keyword);
         supabaseQuery = supabaseQuery.or(
-          `title.ilike."${keyword}",description.ilike."${keyword}",city.ilike."${keyword}"`,
+          `title.ilike."${keyword}",description.ilike."${keyword}",city.ilike."${keyword}"`
         );
       }
 
@@ -220,7 +219,7 @@ const ConsultantDash = () => {
         toast.error("Failed to load listings.");
       } else if (listingData) {
         setPropertiess(
-          Array.isArray(listingData) ? listingData : [listingData],
+          Array.isArray(listingData) ? listingData : [listingData]
         );
       }
     } catch (err) {
@@ -590,7 +589,6 @@ const ConsultantDash = () => {
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-1/3 h-48 md:h-auto relative">
                       <img
-
                         src={listing.listing_images?.url ?? undefined}
                         alt={listing.title}
                         className="w-full h-full object-cover"

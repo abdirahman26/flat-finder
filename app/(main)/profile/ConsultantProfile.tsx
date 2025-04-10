@@ -10,6 +10,7 @@ import {
   Building,
   Mail,
   IdCard,
+  Phone,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ interface UserData {
   created_at: string;
   email: string;
   id_number: number;
+  mobile_number: number | null;
 }
 
 const user = {
@@ -45,6 +47,7 @@ function ConsultantProfile() {
     created_at: "",
     email: "",
     id_number: 0o000,
+    mobile_number: 0,
   });
   const [initials, setInitials] = useState("");
 
@@ -125,8 +128,10 @@ function ConsultantProfile() {
               </div>
 
               <div className="flex items-start">
-                <User className="h-6 w-6 text-custom-lime mr-3" />
-                <p className="text-lg text-gray-300">{user.bio}</p>
+                <Phone className="h-5 w-5 text-custom-lime mr-2" />
+                <p className="text-lg text-gray-300">
+                  {userData.mobile_number}
+                </p>
               </div>
 
               <div className="flex items-start">
