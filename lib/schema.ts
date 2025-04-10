@@ -71,34 +71,16 @@ export const signUpSchema = z.object({
 
 
 export const signInSchema = z.object({
-    email: z.string().trim().email({
-        message: "Please enter a valid email address.",
-      }),
+  email: z.string().trim().email({
+    message: "Please enter a valid email address.",
+  }),
 
-      password: z
-      .string()
-      .trim()
-      .min(6, { message: "Password must be at least 6 characters long." })
-      .superRefine((password, ctx) => {
-          const containsUppercase = /[A-Z]/;
-          const containsLowercase = /[a-z]/;
-          const containsSpecialChar = /[`!@#$%^&*()_\-+=\[\]{};':"\\|,.<>\/?~ ]/;
-          const containsNumber = /\d/;
-        
-          if (
-            !containsUppercase.test(password) ||
-            !containsLowercase.test(password) ||
-            !containsSpecialChar.test(password) ||
-            !containsNumber.test(password)
-          ) {
-            ctx.addIssue({
-              code: "custom",
-              message:
-                "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.",
-            });
-          }
-        })
-        ,
-})
+  password: z
+    .string()
+    .trim()
+    .min(6, { message: "Password must be at least 6 characters long." }) 
+    .max(128, { message: "Password cannot exceed 128 characters." }) 
+});
+
 
 
