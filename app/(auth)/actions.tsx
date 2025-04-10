@@ -843,3 +843,14 @@ export const getBookingsWithDetailsByUserId = async (user_id: string) => {
 
   return { data, error };
 };
+
+export const getBookingsByListingId = async (listing_id: string) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("booking")
+    .select("booking_from, booking_to")
+    .eq("listing_id", listing_id);
+
+  return { data, error };
+};
