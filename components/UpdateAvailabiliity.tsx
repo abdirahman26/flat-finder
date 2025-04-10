@@ -24,7 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import { Trash2, Calendar } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { getListingAvailability, updateListingAvailability } from "@/app/(auth)/actions";
+import { getListingAvailability, updateListingAvailability, getBookingsByListingId } from "@/app/(auth)/actions";
 import { DatePickerWithRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
@@ -59,7 +59,7 @@ const UpdateAvailability: React.FC<UpdateAvailabilityProps> = ({ listingId }) =>
     fetchAvailability();
   }, [listingId]);
 
-  const handleAddAvailability = (range: DateRange | undefined) => {
+  const handleAddAvailability = async (range: DateRange | undefined) => {
       if (!range?.from || !range?.to) return;
   
       // output all dates selected so for teh array
@@ -86,7 +86,37 @@ const UpdateAvailability: React.FC<UpdateAvailabilityProps> = ({ listingId }) =>
         setShowErrorDialog(true);
         return;
       }
-  
+
+      // Fetch bookings and check overlap
+      const { data: bookings, error: bookingError } = await getBookingsByListingId(listingId);
+
+      if (bookingError) {
+        console.error("Error checking bookings:", bookingError);
+        toast.error("Could not verify bookings.");
+        return;
+      }
+
+      if (!bookings) return;
+
+      for (const booking of bookings) {
+        if (booking.booking_from && booking.booking_to) {
+          const bookingFrom = new Date(booking.booking_from);
+          const bookingTo = new Date(booking.booking_to);
+          const isOverlap = range.from <= bookingTo && range.to >= bookingFrom;
+          console.log("Checking overlap with booking:", bookingFrom, "-", bookingTo, "→", isOverlap);
+          if (isOverlap) {
+            overlap = true;
+            break;
+          }
+        }
+      }
+
+      if (overlap) {
+        console.log("overlap with booking", overlap);
+        setShowErrorDialog(true);
+        return;
+      }
+
       setAvailability((prev) => [...prev, range]);
     };
 
