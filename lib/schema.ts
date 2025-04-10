@@ -55,6 +55,16 @@ export const signUpSchema = z.object({
           return { message: "No role selected." };
         },
       }),
+      mobile_number: z
+      .coerce
+      .number({
+        invalid_type_error: "Mobile number must be a number.",
+        required_error: "Mobile number is required.",
+      })
+      .int({ message: "Mobile number must be a whole number." })
+      .refine((num) => num.toString().length === 10, {
+        message: "Mobile number must be exactly 10 digits long.",
+      }),
 
   
 });

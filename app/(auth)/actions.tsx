@@ -1,6 +1,5 @@
 "use server";
 
-
 import { createClient } from "@/supabase/server";
 import { subDays, formatISO } from "date-fns";
 
@@ -28,6 +27,7 @@ export const signUpFunc = async (
   id_number: number,
   first_name: string,
   role: string,
+  mobile_number: number
 ): Promise<SignUpResponse> => {
   const supabase = await createClient();
 
@@ -50,6 +50,7 @@ export const signUpFunc = async (
           first_name,
           role,
           email,
+          mobile_number,
         },
       ])
       .select();
@@ -146,7 +147,7 @@ export const getPendingListingsCount = async (): Promise<number> => {
   const { count, error } = await supabase
     .from("listings")
     .select("*", { count: "exact", head: true })
-    .eq("is_verified", "Unverified"); 
+    .eq("is_verified", "Unverified");
 
   if (error) {
     console.error("Error fetching pending listings count:", error);
@@ -155,7 +156,6 @@ export const getPendingListingsCount = async (): Promise<number> => {
 
   return count ?? 0;
 };
-
 
 export const getUserSignupsStats = async (): Promise<{
   past7DaysCount: number;
@@ -172,18 +172,20 @@ export const getUserSignupsStats = async (): Promise<{
   const sevenDaysAgoISO = sevenDaysAgo.toISOString();
   const todayStartISO = todayStart.toISOString();
 
-  const [{ count: past7DaysCount, error: error7d }, { count: todayCount, error: errorToday }] =
-    await Promise.all([
-      supabase
-        .from("users")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", sevenDaysAgoISO),
+  const [
+    { count: past7DaysCount, error: error7d },
+    { count: todayCount, error: errorToday },
+  ] = await Promise.all([
+    supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", sevenDaysAgoISO),
 
-      supabase
-        .from("users")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", todayStartISO),
-    ]);
+    supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", todayStartISO),
+  ]);
 
   if (error7d || errorToday) {
     console.error("Error fetching user signup stats:", error7d || errorToday);
@@ -212,8 +214,6 @@ export const getVerifiedListingsCount = async (): Promise<number> => {
   return count ?? 0;
 };
 
-
-
 export const getUnresolvedComplaintsCount = async (): Promise<number> => {
   const supabase = await createClient();
 
@@ -236,7 +236,8 @@ export const getAllListingsOrderedByStatus = async () => {
 
   const { data, error } = await supabase
     .from("listings")
-    .select(`
+    .select(
+      `
       listing_id,
       title,
       city,
@@ -247,7 +248,8 @@ export const getAllListingsOrderedByStatus = async () => {
         email,
         first_name
       )
-    `)
+    `
+    )
     .order("is_verified", { ascending: true }); // Optional: order by status
 
   if (error) {
@@ -274,9 +276,10 @@ export const getUniqueReviewers = async () => {
   return data.map((row) => row.first_name);
 };
 
-
-
-export const updateListingStatus = async (listing_id: string, status: string) => {
+export const updateListingStatus = async (
+  listing_id: string,
+  status: string
+) => {
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -289,7 +292,6 @@ export const updateListingStatus = async (listing_id: string, status: string) =>
     throw error;
   }
 };
-
 
 export const deleteListing = async (listing_id: string) => {
   const supabase = await createClient();
@@ -319,13 +321,10 @@ export const assignReviewer = async (listing_id: string, reviewer: string) => {
   }
 };
 
-
 export const getAllComplaints = async () => {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("complaints")
-    .select(`
+  const { data, error } = await supabase.from("complaints").select(`
       complaint_id,    
       title,
       status,
@@ -358,8 +357,10 @@ export const getAllComplaints = async () => {
   return data;
 };
 
-
-export const updateComplaintStatus = async (complaintId: string, status: string) => {
+export const updateComplaintStatus = async (
+  complaintId: string,
+  status: string
+) => {
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -392,14 +393,16 @@ export const getComplaintMessages = async (complaintId: string) => {
 
   const { data, error } = await supabase
     .from("complaint_messages")
-    .select(`
+    .select(
+      `
       user_id,
       created_at,
       message,
       users:user_id (
         role
       )
-    `)
+    `
+    )
     .eq("complaint_id", complaintId)
     .order("created_at", { ascending: true });
 
@@ -422,13 +425,11 @@ export const sendComplaintMessage = async ({
 }) => {
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from("complaint_messages")
-    .insert({
-      user_id,
-      complaint_id,
-      message,
-    });
+  const { error } = await supabase.from("complaint_messages").insert({
+    user_id,
+    complaint_id,
+    message,
+  });
 
   if (error) {
     console.error("Failed to send message:", error);
@@ -447,7 +448,7 @@ export const addListing = async (
   created_at: string,
   description: string,
   price: number,
-  title: string,
+  title: string
 ) => {
   const supabase = await createClient();
 
@@ -519,7 +520,6 @@ export const getListingById = async (userId: string | string[] | undefined) => {
 
   const id = Array.isArray(userId) ? userId[0] : userId;
 
-
   const { data, error } = await supabase
     .from("listings")
     .select(
@@ -528,7 +528,7 @@ export const getListingById = async (userId: string | string[] | undefined) => {
       listing_images(
         url
       )
-    `,
+    `
     )
     .eq("user_id", id);
 
@@ -556,7 +556,7 @@ export const getAllListings = async () => {
        listing_images(
         url
       )
-      `,
+      `
     );
 
     return { listingData: data ?? [], listingError: error ?? null };
@@ -657,7 +657,7 @@ export const getUserDetails = async () => {
   return { data: userData, error: null };
 };
 export const getUserDetailsById = async (
-  userId: string | string[] | undefined,
+  userId: string | string[] | undefined
 ) => {
   if (!userId) {
     return { data: null, error: new Error("No userId provided") };
@@ -679,7 +679,6 @@ export const getUserDetailsById = async (
 
   return { data: userData, error: null };
 };
-
 
 export const addListingAvailability = async (
   listingId: string,
@@ -797,4 +796,3 @@ export const removeFavourite = async (listing_id: string) => {
 
   return { data, error };
 };
-
