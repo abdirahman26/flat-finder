@@ -33,6 +33,7 @@ import {
 } from "@/app/(auth)/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import  ScheduleBooking from "@components/ScheduleBooking";
 
 interface PropertyListing {
   listing_id: string;
@@ -655,12 +656,7 @@ const ConsultantDash = () => {
                         >
                           View Details
                         </Button>
-                        <Button
-                          size="sm"
-                          className="bg-accent text-dark hover:bg-accent/90 text-sm"
-                        >
-                          <Calendar className="h-3 w-3 mr-1" /> Schedule
-                        </Button>
+                        < ScheduleBooking listingId={listing.listing_id}/>
                         <Button
                           variant="outline"
                           size="sm"
