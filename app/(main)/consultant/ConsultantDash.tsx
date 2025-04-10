@@ -324,14 +324,13 @@ const ConsultantDash = () => {
                   setSearchQuery(value);
                   searchListings(value);
                 }}
-                className="pl-9 bg-dark/60 border-white/10 text-white"
+                className="pl-9 bg-dark/60 border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent/60 focus:border-accent rounded-md"
               />
             </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className="border-white/20 hover:bg-white/10 text-white"
               >
                 <Filter className="mr-2 h-4 w-4" /> Filters
               </Button>
@@ -342,7 +341,7 @@ const ConsultantDash = () => {
                   onClick={() => setViewMode("grid")}
                   className="rounded-none border-0"
                 >
-                  <Grid className="h-4 w-4" />
+                  <Grid className="h-4 w-4 text-custom-lime" />
                 </Button>
                 <Button
                   variant={viewMode === "list" ? "secondary" : "ghost"}
@@ -350,7 +349,7 @@ const ConsultantDash = () => {
                   onClick={() => setViewMode("list")}
                   className="rounded-none border-0"
                 >
-                  <GripHorizontal className="h-4 w-4" />
+                  <GripHorizontal className="h-4 w-4 text-accent" />
                 </Button>
               </div>
             </div>
@@ -649,13 +648,6 @@ const ConsultantDash = () => {
 
                       <div className="mt-4 flex space-x-2">
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-white/20 text-sm"
-                        >
-                          View Details
-                        </Button>
-                        <Button
                           size="sm"
                           className="bg-accent text-dark hover:bg-accent/90 text-sm"
                         >
@@ -691,8 +683,8 @@ const ConsultantDash = () => {
 
           {favouritedProperties.length === 0 ? (
             <div className="glass-card p-8 text-center">
-              <Heart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-medium mb-2">
+              <Heart className="h-12 w-12 mx-auto mb-4 text-accent" />
+              <h3 className="text-xl font-medium mb-2 text-white">
                 Your watchlist is empty
               </h3>
               <p className="text-gray-400 mb-4">

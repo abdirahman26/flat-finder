@@ -34,6 +34,7 @@ import {
   Edit,
   Home,
   ImageIcon,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/supabase/client";
@@ -44,6 +45,7 @@ import {
   getListing,
   removeListing,
   addListingAvailability,
+  getUserDetails,
 } from "@/app/(auth)/actions";
 
 import {
@@ -74,8 +76,20 @@ interface PropertyListing {
   area_code: string;
 }
 
+interface UserData {
+  first_name: string;
+  created_at: string;
+  email: string;
+  id_number: number;
+}
+
 const LandlordDash = () => {
-  // Sample initial data for properties
+  const [userData, setUserData] = useState<UserData>({
+    first_name: "",
+    created_at: "",
+    email: "",
+    id_number: 0o000,
+  });
   const [properties, setProperties] = useState<PropertyListing[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -126,8 +140,38 @@ const LandlordDash = () => {
     }
   };
 
+  const fetchUserData = async () => {
+    try {
+      const supabase = createClient();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData?.user) {
+        console.error("Error fetching user:", authError);
+        toast.error("Failed to retrieve user data.");
+        return;
+      }
+
+      const { data: userData, error: userError } = await getUserDetails();
+
+      if (userError) {
+        console.error("Error fetching user details:", userError);
+        toast.error("Failed to retrieve user details.");
+        return;
+      } else if (userData) {
+        setUserData({
+          ...userData,
+        });
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching user data:", err);
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
   useEffect(() => {
     fetchListings();
+    fetchUserData();
   }, []);
 
   // Handle input changes for new property form
@@ -176,9 +220,10 @@ const LandlordDash = () => {
   };
 
   const handleAddProperty = async () => {
-
     if (availability.length === 0) {
-      toast.error("Please add at least one availability range before adding the listing.");
+      toast.error(
+        "Please add at least one availability range before adding the listing."
+      );
       return;
     }
 
@@ -213,12 +258,12 @@ const LandlordDash = () => {
           available_from: range.from?.toISOString() ?? "",
           available_to: range.to?.toISOString() ?? "",
         }));
-      
+
         const { error: availError } = await addListingAvailability(
           addedListing.listing_id,
           availabilityPayload
         );
-      
+
         if (availError) {
           toast.error("Failed to save availability.");
           console.error("Availability error:", availError);
@@ -309,7 +354,14 @@ const LandlordDash = () => {
     for (const a of availability) {
       if (range.from && range.to && a.from && a.to) {
         const isOverlap = range.from <= a.to && range.to >= a.from;
-        console.log("Checking overlap with:", a.from, "-", a.to, "→", isOverlap);
+        console.log(
+          "Checking overlap with:",
+          a.from,
+          "-",
+          a.to,
+          "→",
+          isOverlap
+        );
         if (isOverlap) {
           overlap = true;
           break;
@@ -328,261 +380,273 @@ const LandlordDash = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Something went wrong</AlertDialogTitle>
-              <AlertDialogDescription>
-                This availability range overlaps with an existing one. Please select a different date.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowErrorDialog(false)}>Close</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <div className="mt-8 glass-card p-6 animate-slide-up">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white">
+              Welcome back, {userData.first_name}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your property listings
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-accent text-accent-foreground hover:bg-accent/80">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add New Listing
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Property Listing</DialogTitle>
+                  <DialogDescription>
+                    Enter the details of your new property listing.
+                  </DialogDescription>
+                </DialogHeader>
 
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Landlord Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your property listings
-          </p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/80">
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Listing
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Add New Property Listing</DialogTitle>
-              <DialogDescription>
-                Enter the details of your new property listing.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="title" className="text-right">
-                  Title
-                </label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={newProperty.title}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-
-              {/* Image Upload Field */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <label htmlFor="image" className="text-right pt-2">
-                  Image
-                </label>
-                <div className="col-span-3">
-                  <label
-                    htmlFor="image"
-                    className="flex flex-col items-center justify-center w-full border border-input border-dashed rounded-md bg-background px-4 py-6 text-sm text-muted-foreground cursor-pointer hover:bg-gray-100 transition"
-                  >
-                    <ImageIcon className="mb-2 h-6 w-6 text-muted-foreground" />
-                    <span className="text-sm font-medium">
-                      Click to upload or drag and drop
-                    </span>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      PNG, JPG, GIF up to 5MB
-                    </span>
-                    <input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="title" className="text-right">
+                      Title
+                    </label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={newProperty.title}
+                      onChange={handleInputChange}
+                      className="col-span-3"
                     />
-                  </label>
+                  </div>
 
-                  {previewUrl && (
-                    <div className="relative mt-3 h-20 w-20 rounded-xl overflow-hidden border border-muted shadow">
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="h-full w-full object-cover"
-                      />
-
-                      {/* ✖ Close Button on top-right of the image */}
-                      <button
-                        onClick={() => setPreviewUrl(null)}
-                        className="absolute top-1 right-1 bg-white text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-gray-200 transition"
-                        aria-label="Remove image"
-                        style={{ zIndex: 10 }}
+                  {/* Image Upload Field */}
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <label htmlFor="image" className="text-right pt-2">
+                      Image
+                    </label>
+                    <div className="col-span-3">
+                      <label
+                        htmlFor="image"
+                        className="flex flex-col items-center justify-center w-full border border-input border-dashed rounded-md bg-background px-4 py-6 text-sm text-muted-foreground cursor-pointer hover:bg-gray-100 transition"
                       >
-                        &times;
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+                        <ImageIcon className="mb-2 h-6 w-6 text-muted-foreground" />
+                        <span className="text-sm font-medium">
+                          Click to upload or drag and drop
+                        </span>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          PNG, JPG, GIF up to 5MB
+                        </span>
+                        <input
+                          id="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="description" className="text-right">
-                  Description
-                </label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={newProperty.description}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
+                      {previewUrl && (
+                        <div className="relative mt-3 h-20 w-20 rounded-xl overflow-hidden border border-muted shadow">
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="h-full w-full object-cover"
+                          />
 
-               {/* Select availability */}
-               <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="date" className="text-right">
-                  Availability
-                </label>
-                <DatePickerWithRange className="col-span-3" onAdd={handleAddAvailability} />
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="col-span-4 col-start-2">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>From</TableHead>
-                        <TableHead>To</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {availability.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-center text-muted-foreground">
-                            No availability added.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        availability.map((range, i) => (
-                          <TableRow key={i}>
-                           <TableCell>
-                            {range.from ? format(range.from, "LLL dd, y") : "—"}
-                          </TableCell>
-                            <TableCell>{range.to ? format(range.to, "LLL dd, y") : "-"}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button variant="destructive" size="icon" onClick={() => handleRemoveAvailability(i)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                          {/* ✖ Close Button on top-right of the image */}
+                          <button
+                            onClick={() => setPreviewUrl(null)}
+                            className="absolute top-1 right-1 bg-white text-black rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-gray-200 transition"
+                            aria-label="Remove image"
+                            style={{ zIndex: 10 }}
+                          >
+                            &times;
+                          </button>
+                        </div>
                       )}
-                    </TableBody>
-                  </Table>
-                </div> 
-              </div>          
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="price" className="text-right">
-                  Price ($)
-                </label>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  value={newProperty.price.toString()}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="description" className="text-right">
+                      Description
+                    </label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      value={newProperty.description}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="city" className="text-right">
-                  City
-                </label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={newProperty.city}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
+                  {/* Select availability */}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="date" className="text-right">
+                      Availability
+                    </label>
+                    <DatePickerWithRange
+                      className="col-span-3"
+                      onAdd={handleAddAvailability}
+                    />
+                  </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="area" className="text-right">
-                  Area
-                </label>
-                <Input
-                  id="area"
-                  name="area"
-                  value={newProperty.area}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <div className="col-span-4 col-start-2">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>From</TableHead>
+                            <TableHead>To</TableHead>
+                            <TableHead className="text-right">
+                              Actions
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {availability.length === 0 ? (
+                            <TableRow>
+                              <TableCell
+                                colSpan={3}
+                                className="text-center text-muted-foreground"
+                              >
+                                No availability added.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            availability.map((range, i) => (
+                              <TableRow key={i}>
+                                <TableCell>
+                                  {range.from
+                                    ? format(range.from, "LLL dd, y")
+                                    : "—"}
+                                </TableCell>
+                                <TableCell>
+                                  {range.to
+                                    ? format(range.to, "LLL dd, y")
+                                    : "-"}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      variant="destructive"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleRemoveAvailability(i)
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="area_code" className="text-right">
-                  Zip-Code
-                </label>
-                <Input
-                  id="area_code"
-                  name="area_code"
-                  value={newProperty.area_code}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="price" className="text-right">
+                      Price ($)
+                    </label>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      value={newProperty.price.toString()}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="bedrooms" className="text-right">
-                  Bedrooms
-                </label>
-                <Input
-                  id="bedrooms"
-                  name="bedrooms"
-                  type="number"
-                  value={newProperty.bedrooms.toString()}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="city" className="text-right">
+                      City
+                    </label>
+                    <Input
+                      id="city"
+                      name="city"
+                      value={newProperty.city}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="bathrooms" className="text-right">
-                  Bathrooms
-                </label>
-                <Input
-                  id="bathrooms"
-                  name="bathrooms"
-                  type="number"
-                  value={newProperty.bathrooms.toString()}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-            </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="area" className="text-right">
+                      Area
+                    </label>
+                    <Input
+                      id="area"
+                      name="area"
+                      value={newProperty.area}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
 
-            <DialogFooter>
-              <Button type="submit" onClick={handleAddProperty}>
-                Add Property
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="area_code" className="text-right">
+                      Zip-Code
+                    </label>
+                    <Input
+                      id="area_code"
+                      name="area_code"
+                      value={newProperty.area_code}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="bedrooms" className="text-right">
+                      Bedrooms
+                    </label>
+                    <Input
+                      id="bedrooms"
+                      name="bedrooms"
+                      type="number"
+                      value={newProperty.bedrooms.toString()}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="bathrooms" className="text-right">
+                      Bathrooms
+                    </label>
+                    <Input
+                      id="bathrooms"
+                      name="bathrooms"
+                      type="number"
+                      value={newProperty.bathrooms.toString()}
+                      onChange={handleInputChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit" onClick={handleAddProperty}>
+                    Add Property
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
       </div>
 
       {/* Property Listings Table */}
-      <Card className="bg-custom-dark mb-8 text-gray-300">
+      <Card className="bg-custom-dark mb-8 text-white mt-7">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Building className="mr-2 h-5 w-5" />
-            Your Property Listings
+            <Building className="mr-2 h-8 w-8 text-accent " />
+            <span className="text-2xl text-white">Your Property Listings</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -622,15 +686,17 @@ const LandlordDash = () => {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
-                          variant="outline"
+                          variant="default"
                           size="icon"
                           onClick={() => handleViewProperty(property)}
+                          className="cursor-pointer"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 text-custom-dark" />
                         </Button>
                         <Button
                           variant="destructive"
                           size="icon"
+                          className="cursor-pointer"
                           onClick={() =>
                             handleRemoveProperty(property.listing_id)
                           }
