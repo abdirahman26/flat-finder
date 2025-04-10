@@ -90,9 +90,6 @@ import {
 } from "@/components/ui/select"
 
 import { Input } from "@/components/ui/input"
-
-import messages from "@/app/(main)/admin/complaint_messages.json"
-
 import ComplaintCellViewer from "./ReplyComplaintDrawer";
 
 

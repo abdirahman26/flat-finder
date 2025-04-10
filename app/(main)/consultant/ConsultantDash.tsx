@@ -283,6 +283,11 @@ const ConsultantDash = () => {
     fetchListings();
     fetchFavourites();
   }, []);
+
+  const handleClick = () => {
+    router.push("/consultant/view-scheduling");
+  };
+
   return (
     <div
       className={`min-h-screen bg-dark ${
@@ -302,7 +307,10 @@ const ConsultantDash = () => {
               </p>
             </div>
             <div className="mt-4 md:mt-0">
-              <Button className="bg-accent text-dark hover:bg-accent/90">
+              <Button
+                onClick={handleClick}
+                className="bg-accent text-dark hover:bg-accent/90"
+              >
                 <Calendar className="mr-2 h-4 w-4" /> View Schedulings
               </Button>
             </div>
@@ -568,12 +576,7 @@ const ConsultantDash = () => {
                       >
                         Contact Host
                       </Button>
-                      <Button
-                        size="sm"
-                        className="bg-accent text-dark hover:bg-accent/90 text-sm flex-1"
-                      >
-                        <Calendar className="h-3 w-3 mr-1" /> Schedule
-                      </Button>
+                      < ScheduleBooking listingId={listing.listing_id}/>
                     </div>
                   </CardContent>
                 </Card>

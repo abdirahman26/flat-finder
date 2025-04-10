@@ -820,13 +820,26 @@ export const addBooking = async (
   return { data, error };
 };
 
-export const getBookingsByListingId = async (listing_id: string) => {
+export const getBookingsWithDetailsByUserId = async (user_id: string) => {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("booking")
-    .select("booking_from, booking_to")
-    .eq("listing_id", listing_id);
+    .select(`
+      booking_from,
+      booking_to,
+      listings (
+        title,
+        price,
+        area_code,
+        city
+      ),
+      users (
+        first_name,
+        email
+      )
+    `)
+    .eq("user_id", user_id);
 
   return { data, error };
 };
