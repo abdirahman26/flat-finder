@@ -24,18 +24,15 @@ const Nav = () => {
       const { error } = await supabase.auth.signOut();
       if (error) console.error("Sign out error:", error);
       router.push("/sign-in");
-
       return;
     }
 
     if (link === "/dashboard") {
       const { error, role } = await navRouting();
-
       if (error) {
         console.log(error);
         return;
       }
-
       router.push(`/${role}`);
     }
 
@@ -45,24 +42,28 @@ const Nav = () => {
   };
 
   return (
-    <nav className="bg-transparent w-full z-50 px-8 py-4">
-      <div className="relative max-w-7xl mx-auto flex items-center h-16">
-        <div className="text-3xl font-bold text-[#c4ff3a] tracking-tight mr-auto">
+    <nav className="w-full z-50 bg-gradient-to-b from-dark to-transparent px-6 md:px-12 py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between h-16">
+        {/* Logo */}
+        <div className="text-4xl font-bold text-lime-400 tracking-tight">
           FDM
         </div>
-        <div className="absolute left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-md px-12 py-4">
-          <div className="flex space-x-8">
+
+        {/* Nav Items */}
+        <div className="bg-white backdrop-blur-sm rounded-full px-8 py-3 shadow-lg">
+          <ul className="flex items-center gap-8">
             {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.link}
-                onClick={(e) => handleRouting(e, item.link)} // Pass event and link
-                className="text-gray-800 hover:text-lime-500 transition-colors text-lg cursor-pointer"
-              >
-                {item.name}
-              </a>
+              <li key={item.name}>
+                <a
+                  href={item.link}
+                  onClick={(e) => handleRouting(e, item.link)}
+                  className="text-custom-dark hover:text-custom-lime/100 transition-colors duration-200 text-base font-medium"
+                >
+                  {item.name}
+                </a>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
     </nav>
