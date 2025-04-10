@@ -631,7 +631,11 @@ const LandlordDash = () => {
                 </div>
 
                 <DialogFooter>
-                  <Button type="submit" onClick={handleAddProperty}>
+                  <Button
+                    type="submit"
+                    onClick={handleAddProperty}
+                    className="text-black"
+                  >
                     Add Property
                   </Button>
                 </DialogFooter>
